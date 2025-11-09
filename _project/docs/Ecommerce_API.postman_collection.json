@@ -1,0 +1,674 @@
+{
+  "info": {
+    "name": "E-Commerce API",
+    "description": "Colección completa de endpoints para la API de E-Commerce",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Healthcheck",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/healthz/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "healthz", ""]
+            }
+          }
+        },
+        {
+          "name": "OpenAPI Schema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schema/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schema", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "Categories",
+          "item": [
+            {
+              "name": "List Categories",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/categories/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "categories", ""]
+                }
+              }
+            },
+            {
+              "name": "Get Category",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/categories/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "categories", "1", ""]
+                }
+              }
+            },
+            {
+              "name": "Root Categories",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/categories/root/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "categories", "root", ""]
+                }
+              }
+            },
+            {
+              "name": "Create Category",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Nueva Categoría\",\n  \"description\": \"Descripción\",\n  \"parent\": null\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/categories/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "categories", ""]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Attributes",
+          "item": [
+            {
+              "name": "List Attributes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/attributes/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "attributes", ""]
+                }
+              }
+            },
+            {
+              "name": "Get Attribute",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/attributes/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "attributes", "1", ""]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Products",
+          "item": [
+            {
+              "name": "List Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/products/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "products", ""]
+                }
+              }
+            },
+            {
+              "name": "Get Product",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/products/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "products", "1", ""]
+                }
+              }
+            },
+            {
+              "name": "Featured Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/products/featured/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "products", "featured", ""]
+                }
+              }
+            },
+            {
+              "name": "Search Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/products/?search=camisa",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "products", ""],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "camisa"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter by Category",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/catalog/products/?category=1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "catalog", "products", ""],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Warehouses",
+          "item": [
+            {
+              "name": "List Warehouses",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/warehouses/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "warehouses", ""]
+                }
+              }
+            },
+            {
+              "name": "Get Warehouse",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/warehouses/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "warehouses", "1", ""]
+                }
+              }
+            },
+            {
+              "name": "Warehouse Inventory",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/warehouses/1/inventory/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "warehouses", "1", "inventory", ""]
+                }
+              }
+            },
+            {
+              "name": "Low Stock in Warehouse",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/warehouses/1/low_stock/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "warehouses", "1", "low_stock", ""]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inventory",
+          "item": [
+            {
+              "name": "List Inventory",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/inventory/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "inventory", ""]
+                }
+              }
+            },
+            {
+              "name": "Get Inventory",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/inventory/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "inventory", "1", ""]
+                }
+              }
+            },
+            {
+              "name": "Adjust Stock",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 10,\n  \"reason\": \"Recepción de mercancía\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/inventory/1/adjust_stock/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "inventory", "1", "adjust_stock", ""]
+                }
+              }
+            },
+            {
+              "name": "Reserve Stock",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 5\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/inventory/1/reserve/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "inventory", "1", "reserve", ""]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sales",
+      "item": [
+        {
+          "name": "Customers",
+          "item": [
+            {
+              "name": "List Customers",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/customers/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "customers", ""]
+                }
+              }
+            },
+            {
+              "name": "Create Customer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"full_name\": \"Juan Pérez\",\n  \"email\": \"juan@example.com\",\n  \"phone\": \"70123456\",\n  \"ci_nit\": \"1234567\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/customers/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "customers", ""]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Carts",
+          "item": [
+            {
+              "name": "Get Cart",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/carts/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "carts", "1", ""]
+                }
+              }
+            },
+            {
+              "name": "Add to Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"variant_id\": 1,\n  \"quantity\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/carts/1/add_item/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "carts", "1", "add_item", ""]
+                }
+              }
+            },
+            {
+              "name": "Checkout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"customer_id\": 1,\n  \"shipping_address_id\": 1,\n  \"payment_method\": \"CREDIT_CARD\",\n  \"payment_provider\": \"MOCK\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/carts/1/checkout/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "carts", "1", "checkout", ""]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders",
+          "item": [
+            {
+              "name": "List Orders",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/orders/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "orders", ""]
+                }
+              }
+            },
+            {
+              "name": "Get Order",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/orders/1/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "orders", "1", ""]
+                }
+              }
+            },
+            {
+              "name": "Confirm Payment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idempotency_key\": \"{{$guid}}\",\n  \"provider\": \"STRIPE\",\n  \"provider_ref\": \"ch_1234567890\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/orders/1/confirm_payment/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "orders", "1", "confirm_payment", ""]
+                }
+              }
+            },
+            {
+              "name": "Cancel Order",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/sales/orders/1/cancel/",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "sales", "orders", "1", "cancel", ""]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Security",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login", ""]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout", ""]
+            }
+          }
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me", ""]
+            }
+          }
+        },
+        {
+          "name": "User Menu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/menu/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "menu", ""]
+            }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", ""]
+            }
+          }
+        },
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/roles/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "roles", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/sales/dashboard/?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "sales", "dashboard", ""],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Sales Facts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/sales/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "sales", ""]
+            }
+          }
+        },
+        {
+          "name": "Generate Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date_from\": \"2025-11-01\",\n  \"date_to\": \"2025-11-05\",\n  \"format\": \"json\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/sales/generate_report/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "sales", "generate_report", ""]
+            }
+          }
+        },
+        {
+          "name": "Predict Sales",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"periods\": 30,\n  \"model_type\": \"LINEAR_REGRESSION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/forecasts/1/predict/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "forecasts", "1", "predict", ""]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
