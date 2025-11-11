@@ -41,12 +41,14 @@ INSTALLED_APPS = [
     
     # Third party apps
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',  # JWT token blacklist
     'corsheaders',
     'drf_spectacular',  # Swagger/OpenAPI
     
     # Local apps (5 módulos funcionales)
-    'security',    # Autenticación y RBAC
-    'catalog',     # Productos y categorías
+    'customers',       # Clientes del ecommerce
+    'administration',  # Autenticación y RBAC (admin/staff)
+    'catalog',         # Productos y categorías
     'inventory',   # Almacenes e inventario
     'sales',       # Ventas y pedidos
     'analytics',   # Reportes y dashboard
@@ -143,15 +145,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
-AUTH_USER_MODEL = 'security.User'
+AUTH_USER_MODEL = 'administration.User'
 
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Para admin
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Cambiado a AllowAny para permitir acceso público
+        'rest_framework.permissions.AllowAny',  # Por defecto permitir acceso sin auth (catálogo público)
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -160,6 +163,37 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# JWT Settings
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Token de acceso dura 1 hora
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Token de refresh dura 7 días
+    'ROTATE_REFRESH_TOKENS': True,  # Genera nuevo refresh token al refrescar
+    'BLACKLIST_AFTER_ROTATION': True,  # Invalida el refresh token anterior
+    'UPDATE_LAST_LOGIN': True,  # Actualiza last_login del usuario
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': 'ecommerce-api',
+    
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    
+    'JTI_CLAIM': 'jti',
+    
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 # DRF Spectacular (Swagger/OpenAPI)
@@ -187,17 +221,25 @@ SPECTACULAR_SETTINGS = {
         'displayOperationId': False,
         'filter': True,
     },
+    # Configuración de seguridad JWT en Swagger
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
 }
 
-# CORS Settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:8000",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8000",
-]
+# OpenAI API Configuration (para reportes con IA)
+OPENAI_API_KEY = config('OPENAI_API_KEY', default=None)
+LLM_MODEL = config('LLM_MODEL', default='gpt-4o-mini')
+
+# CORS Settings - Permitir todos los orígenes en desarrollo
+CORS_ALLOW_ALL_ORIGINS = True  # Permite todos los orígenes (solo para desarrollo)
 
 CORS_ALLOW_CREDENTIALS = True
 

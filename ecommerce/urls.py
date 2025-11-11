@@ -35,7 +35,8 @@ urlpatterns = [
     
     # API endpoints
     path('api/catalog/', include('catalog.urls')),
-    path('api/auth/', include('security.urls')),
+    path('api/customers/', include('customers.urls')),  # Customer auth endpoints
+    path('api/auth/', include('administration.urls')),  # Admin/Staff auth
     path('api/inventory/', include('inventory.urls')),
     path('api/sales/', include('sales.urls')),
     path('api/analytics/', include('analytics.urls')),

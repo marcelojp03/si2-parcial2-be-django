@@ -11,7 +11,7 @@ class User(AbstractUser):
     avatar = models.CharField(max_length=400, blank=True)
     
     class Meta:
-        db_table = 'security_user'
+        db_table = 'administration_user'
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
 
@@ -29,7 +29,7 @@ class Role(models.Model):
     description = models.CharField(max_length=200, blank=True)
     
     class Meta:
-        db_table = 'security_role'
+        db_table = 'administration_role'
         verbose_name = 'Rol'
         verbose_name_plural = 'Roles'
 
@@ -48,7 +48,7 @@ class Resource(models.Model):
     icon = models.CharField(max_length=50, blank=True)
     
     class Meta:
-        db_table = 'security_resource'
+        db_table = 'administration_resource'
         verbose_name = 'Recurso'
         verbose_name_plural = 'Recursos'
         ordering = ['order', 'name']
@@ -68,7 +68,7 @@ class Subresource(models.Model):
     order = models.PositiveIntegerField(default=0)
     
     class Meta:
-        db_table = 'security_subresource'
+        db_table = 'administration_subresource'
         verbose_name = 'Subrecurso'
         verbose_name_plural = 'Subrecursos'
         ordering = ['order', 'name']
@@ -86,7 +86,7 @@ class RoleResource(models.Model):
     subresource = models.ForeignKey(Subresource, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'security_role_resource'
+        db_table = 'administration_role_resource'
         unique_together = ("role", "resource", "subresource")
         verbose_name = 'Permiso de Rol'
         verbose_name_plural = 'Permisos de Roles'

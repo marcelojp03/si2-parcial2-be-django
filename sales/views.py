@@ -1,7 +1,6 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db import transaction
 from django.utils import timezone
@@ -30,7 +29,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
     """ViewSet para gestionar clientes"""
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['ci_nit', 'first_name', 'last_name', 'email']
     ordering = ['-created_at']
@@ -55,7 +53,6 @@ class AddressViewSet(viewsets.ModelViewSet):
     """ViewSet para gestionar direcciones"""
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
-    permission_classes = [AllowAny]
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -73,7 +70,6 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet para gestionar carritos"""
     queryset = Cart.objects.prefetch_related('items__variant__product').all()
     serializer_class = CartSerializer
-    permission_classes = [AllowAny]
     
     @extend_schema(
         summary="Agregar item al carrito",
@@ -227,7 +223,6 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet para gestionar pedidos"""
     queryset = Order.objects.prefetch_related('items__variant__product', 'payment').all()
     serializer_class = OrderSerializer
-    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['order_number', 'customer__first_name', 'customer__last_name']
     ordering = ['-created_at']

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import login, logout
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from ecommerce.responses import ApiResponse
 from .models import User, Role, Resource, Subresource, RoleResource
 from .serializers import (
     UserSerializer,
@@ -54,6 +55,99 @@ def logout_view(request):
     """Logout de usuario"""
     logout(request)
     return Response({'message': 'Logout exitoso'})
+
+
+@extend_schema(
+    summary="Login de administrador (API)",
+    description="Autentica un administrador por API. Retorna user_type='admin' para que el frontend redirija al panel de administración. Solo usuarios staff pueden usar este endpoint.",
+    tags=['Auth']
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def admin_login_view(request):
+    """
+    Login para administradores.
+    Acepta username o email.
+    Solo permite usuarios con is_staff=True.
+    """
+    from .serializers import AdminLoginSerializer
+    from django.contrib.auth import authenticate, get_user_model
+    
+    serializer = AdminLoginSerializer(data=request.data)
+    
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    username_or_email = serializer.validated_data['username']
+    password = serializer.validated_data['password']
+    
+    User = get_user_model()
+    
+    # Intentar autenticar con username
+    user = authenticate(username=username_or_email, password=password)
+    
+    # Si falla, intentar buscar por email
+    if user is None:
+        try:
+            user_obj = User.objects.get(email=username_or_email)
+            user = authenticate(username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            pass
+    
+    if user is None:
+        return Response(
+            {'error': 'Invalid credentials'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    
+    # Verificar que sea staff o superuser
+    if not user.is_staff and not user.is_superuser:
+        return Response(
+            {'error': 'Access denied. Admin privileges required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Login con sesión de Django (para acceso al /admin/)
+    login(request, user)
+    
+    return Response({
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+        },
+        'user_type': 'admin',  # Identificador para el frontend
+        'message': 'Admin login successful'
+    }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    summary="Registro de nuevo usuario",
+    description="Crea un nuevo usuario en el sistema",
+    request=UserCreateSerializer,
+    responses={201: UserSerializer},
+    tags=['Auth']
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    """Registro de nuevo usuario"""
+    serializer = UserCreateSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        user = serializer.save()
+        user_serializer = UserSerializer(user)
+        return ApiResponse.success(
+            data=user_serializer.data,
+            message="Usuario registrado exitosamente",
+            http_code=201
+        )
+    
+    return ApiResponse.validation_error(serializer.errors)
 
 
 @extend_schema(
@@ -138,7 +232,6 @@ def user_menu_view(request):
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet para gestionar usuarios"""
     queryset = User.objects.prefetch_related('groups__role').all()
-    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering = ['-date_joined']
@@ -181,7 +274,6 @@ class RoleViewSet(viewsets.ModelViewSet):
     """ViewSet para gestionar roles"""
     queryset = Role.objects.prefetch_related('role_resources').all()
     serializer_class = RoleSerializer
-    permission_classes = [AllowAny]
 
 
 @extend_schema_view(
@@ -194,7 +286,6 @@ class ResourceViewSet(viewsets.ModelViewSet):
     """ViewSet para gestionar recursos"""
     queryset = Resource.objects.prefetch_related('subresources').all()
     serializer_class = ResourceSerializer
-    permission_classes = [AllowAny]
 
 
 @extend_schema_view(
@@ -207,7 +298,6 @@ class RoleResourceViewSet(viewsets.ModelViewSet):
     """ViewSet para gestionar permisos de roles"""
     queryset = RoleResource.objects.select_related('role', 'resource', 'subresource').all()
     serializer_class = RoleResourceSerializer
-    permission_classes = [AllowAny]
     
     def get_queryset(self):
         queryset = super().get_queryset()

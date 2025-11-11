@@ -78,6 +78,22 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
+class AdminLoginSerializer(serializers.Serializer):
+    """
+    Serializer para login de administradores por API.
+    Acepta username o email.
+    """
+    username = serializers.CharField(
+        required=True,
+        help_text='Username o email del administrador'
+    )
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'}
+    )
+
+
 class SubresourceSerializer(serializers.ModelSerializer):
     """Serializer para Subrecursos"""
     
