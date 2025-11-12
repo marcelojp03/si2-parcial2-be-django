@@ -162,9 +162,18 @@ class ProductImage(models.Model):
     """
     Imágenes de productos.
     Soporta múltiples imágenes ordenadas.
+    Compatible con S3 y URLs locales.
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
-    url = models.CharField(max_length=400)  # URL de S3/CloudFront o path local
+    
+    # S3 Storage (preferido para producción)
+    s3_bucket = models.CharField(max_length=100, blank=True, null=True, help_text="Bucket S3 donde está almacenada la imagen")
+    s3_key = models.CharField(max_length=500, blank=True, null=True, help_text="Key (path) de la imagen en S3")
+    
+    # URL Fallback (para desarrollo o URLs externas)
+    url = models.CharField(max_length=400, blank=True, null=True, help_text="URL directa de la imagen (fallback si no usa S3)")
+    
+    # Metadata
     alt = models.CharField(max_length=150, blank=True)
     is_main = models.BooleanField(default=False)
     sort = models.PositiveIntegerField(default=0)
@@ -181,4 +190,15 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - Imagen {self.sort}"
+    
+    def get_image_url(self, expiration=3600):
+        """
+        Obtiene la URL de la imagen.
+        - Si tiene s3_bucket y s3_key: genera presigned URL
+        - Sino: retorna url directa
+        """
+        if self.s3_bucket and self.s3_key:
+            from apps.core.services.aws_s3 import generate_presigned_url
+            return generate_presigned_url(self.s3_bucket, self.s3_key, expiration)
+        return self.url
 

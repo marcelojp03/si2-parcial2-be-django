@@ -79,7 +79,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     def get_main_image(self, obj):
         first_image = obj.images.filter(is_main=True).first() or obj.images.first()
         if first_image:
-            return first_image.url
+            return first_image.get_image_url()
         return None
     
     def get_price_range(self, obj):
@@ -113,7 +113,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         return [
             {
                 'id': img.id,
-                'url': img.url,
+                'url': img.get_image_url(),
                 'alt': img.alt,
                 'is_main': img.is_main,
                 'sort': img.sort

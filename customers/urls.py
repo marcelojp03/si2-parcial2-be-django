@@ -8,7 +8,8 @@ from .views import (
     LoginView,
     LogoutView,
     ProfileView,
-    ChangePasswordView
+    ChangePasswordView,
+    UploadAvatarView
 )
 
 app_name = 'customers'
@@ -23,4 +24,5 @@ urlpatterns = [
     # Profile endpoints
     path('profile/', ProfileView.as_view(), name='profile'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('upload-avatar/', UploadAvatarView.as_view(), name='upload_avatar'),
 ]

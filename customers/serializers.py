@@ -13,7 +13,8 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer básico para datos del usuario"""
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'avatar', 
+                  'avatar_s3_key', 'avatar_s3_bucket', 'is_staff', 'is_superuser']
         read_only_fields = ['id', 'is_staff', 'is_superuser']
 
 
@@ -138,10 +139,14 @@ class ProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', required=False)
     first_name = serializers.CharField(source='user.first_name', required=False)
     last_name = serializers.CharField(source='user.last_name', required=False)
+    avatar = serializers.CharField(source='user.avatar', required=False, allow_blank=True)
+    avatar_s3_key = serializers.CharField(source='user.avatar_s3_key', required=False, allow_blank=True)
+    avatar_s3_bucket = serializers.CharField(source='user.avatar_s3_bucket', required=False, allow_blank=True)
     
     class Meta:
         model = Customer
         fields = ['id', 'user', 'email', 'first_name', 'last_name', 
+                  'avatar', 'avatar_s3_key', 'avatar_s3_bucket',
                   'phone', 'address', 'city', 'country', 'postal_code', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
     
@@ -155,6 +160,9 @@ class ProfileSerializer(serializers.ModelSerializer):
             user.email = user_data.get('email', user.email)
             user.first_name = user_data.get('first_name', user.first_name)
             user.last_name = user_data.get('last_name', user.last_name)
+            user.avatar = user_data.get('avatar', user.avatar)
+            user.avatar_s3_key = user_data.get('avatar_s3_key', user.avatar_s3_key)
+            user.avatar_s3_bucket = user_data.get('avatar_s3_bucket', user.avatar_s3_bucket)
             user.save()
         
         # Actualizar datos del Customer

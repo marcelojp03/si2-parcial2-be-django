@@ -2,6 +2,8 @@
 
 API REST completa para plataforma de comercio electrónico desarrollada con Django REST Framework.
 
+**✨ Versión 2.0** - Con JWT Authentication y Reportes con IA usando OpenAI GPT-4o-mini
+
 ## � Estructura del Proyecto
 
 ```
@@ -39,6 +41,7 @@ ecommerce-django-be/
 ### 🚀 Guías de Inicio
 - **[_project/docs/QUICK_START.md](_project/docs/QUICK_START.md)** - Inicio rápido del proyecto
 - **[_project/docs/API_STATUS_REPORT.md](_project/docs/API_STATUS_REPORT.md)** - Estado actual del backend (96.4% funcional)
+- **[_project/docs/JWT_AND_AI_REPORTS_GUIDE.md](_project/docs/JWT_AND_AI_REPORTS_GUIDE.md)** - ✨ **Guía JWT y Reportes con IA**
 
 ### 📖 Documentación API
 - **[_project/docs/API_DOCUMENTATION.md](_project/docs/API_DOCUMENTATION.md)** - Documentación completa de todos los endpoints
@@ -46,6 +49,9 @@ ecommerce-django-be/
 - **[_project/docs/Ecommerce_API.postman_collection.json](_project/docs/Ecommerce_API.postman_collection.json)** - Colección de Postman
 
 ### 👨‍💻 Guías para Frontend
+- **[_project/docs/FRONTEND_QUICK_START.md](_project/docs/FRONTEND_QUICK_START.md)** - ⚡ **Inicio rápido para frontend (NUEVO)**
+- **[_project/docs/FRONTEND_INTEGRATION_GUIDE.md](_project/docs/FRONTEND_INTEGRATION_GUIDE.md)** - 📘 **Guía completa de integración (NUEVO)**
+- **[_project/docs/typescript-models.ts](_project/docs/typescript-models.ts)** - 📝 **Modelos TypeScript listos para usar**
 - **[_project/docs/ANGULAR_FRONTEND_GUIDE.md](_project/docs/ANGULAR_FRONTEND_GUIDE.md)** - Guía completa para Angular
 - **[_project/docs/FRONTEND_COMPONENTS_GUIDE.md](_project/docs/FRONTEND_COMPONENTS_GUIDE.md)** - Componentes recomendados (React/Vue/Angular)
 
@@ -53,13 +59,52 @@ ecommerce-django-be/
 - **[_project/docs/DATABASE_SCHEMA.md](_project/docs/DATABASE_SCHEMA.md)** - Esquema completo de la base de datos
 - **[_project/docs/ERD.md](_project/docs/ERD.md)** - Diagrama entidad-relación
 
-## 🚀 Inicio Rápido
+## ✨ Nuevas Características (Versión 2.0)
+
+### � JWT Authentication
+- **Tokens de acceso** (1 hora) y **refresh** (7 días)
+- **Rotación automática** de refresh tokens
+- **Blacklisting** de tokens antiguos
+- **Swagger UI** con autenticación Bearer integrada
+- Endpoints: `/api/auth/token/`, `/api/auth/token/refresh/`, `/api/auth/token/verify/`
+
+### 🤖 Reportes con IA (OpenAI GPT-4o-mini)
+- **Generación de SQL** desde lenguaje natural
+- **Autocorrección** automática de SQL con errores
+- **Interpretación** de resultados en lenguaje natural
+- **Exportación** a JSON, CSV, Excel y PDF
+- **Modo dry-run** para validar SQL sin ejecutar
+- Endpoint: `POST /api/analytics/reports/ai-report/`
+
+**Ejemplo:**
+```bash
+POST /api/analytics/reports/ai-report/
+{
+  "query": "Muéstrame las ventas de los últimos 30 días",
+  "format": "excel"
+}
+```
+
+### 📋 Sistema de Respuestas Consistente
+- Formato estandarizado en toda la API
+- Clase `ApiResponse` con métodos helper
+- Manejo de errores unificado
+
+---
+
+## �🚀 Inicio Rápido
+
+### Credenciales de Prueba
+```
+Username: admin
+Password: admin123
+```
 
 ### URLs Principales
 
 ```
 Base URL:     http://127.0.0.1:8000
-Swagger UI:   http://127.0.0.1:8000/api/_project/docs/
+Swagger UI:   http://127.0.0.1:8000/api/docs/         ← Con JWT auth
 ReDoc:        http://127.0.0.1:8000/api/redoc/
 Admin Panel:  http://127.0.0.1:8000/admin/
 Healthcheck:  http://127.0.0.1:8000/api/healthz/
@@ -138,10 +183,16 @@ python manage.py runserver
 📁 analytics/
 ├── models.py          # SaleFact, ForecastModel, Report
 ├── serializers.py     # Serializers con métricas
-├── views.py           # Dashboard, reportes, forecasting
-└── urls.py            # 10+ endpoints
+├── views.py           # Dashboard, reportes, forecasting, AI reports
+├── report_utils.py    # ✨ Utilidades para IA (NUEVO)
+└── urls.py            # 11+ endpoints
 ```
 - Dashboard con métricas de ventas
+- **🤖 Reportes con IA usando OpenAI GPT-4o-mini (NUEVO)**
+- **Generación de SQL desde lenguaje natural**
+- **Autocorrección de SQL con IA**
+- **Interpretación de resultados en lenguaje natural**
+- **Exportación a CSV, Excel y PDF**
 - Top productos y categorías
 - Generación de reportes personalizados
 - Forecasting de ventas (simulado, listo para ML real)
@@ -202,10 +253,14 @@ python manage.py runserver
 - **Python:** 3.12.9
 - **Django:** 5.2.7
 - **Django REST Framework:** 3.16.1
+- **djangorestframework-simplejwt:** 5.5.1 (JWT Auth)
 - **PostgreSQL:** 15+ en AWS RDS
 - **drf-spectacular:** 0.28.0 (OpenAPI/Swagger)
 - **django-cors-headers:** 4.9.0
 - **python-decouple:** 3.8
+- **openai:** 2.7.1 (Reportes con IA)
+- **openpyxl:** 3.1.5 (Exportación Excel)
+- **reportlab:** 4.4.4 (Exportación PDF)
 
 ## 🎯 Características Principales
 
@@ -246,16 +301,25 @@ curl http://127.0.0.1:8000/api/healthz/
 - **Formato fechas:** ISO 8601
 - **Paginación:** 10 items/página (max 100)
 
-## � Seguridad
+## 🔐 Seguridad
 
-### Actualmente
-- `AllowAny` para desarrollo
-- Sesiones de Django
+### Implementado ✅
+- **JWT Authentication** con djangorestframework-simplejwt
+- **Permisos `IsAuthenticated`** por defecto en todos los endpoints
+- **Tokens con expiración**: Access token (1 hora), Refresh token (7 días)
+- **Rotación de tokens**: Se genera nuevo refresh token al refrescar
+- **Sesiones de Django** para admin panel
 
-### Para Producción (Pendiente)
-- JWT Authentication
-- Rate Limiting / Throttling
-- Permisos `IsAuthenticated`
+### Endpoints Públicos (No requieren JWT)
+- `POST /api/auth/token/` - Obtener token
+- `POST /api/auth/token/refresh/` - Refrescar token
+- `POST /api/auth/register/` - Registro de usuarios
+- `GET /api/healthz/` - Healthcheck
+- `GET /api/docs/` - Swagger UI
+
+### Para Producción (Opcional)
+- Rate Limiting / Throttling específico por endpoint
+- Blacklist de tokens comprometidos (con Redis)
 
 ## 📝 Comandos Útiles
 

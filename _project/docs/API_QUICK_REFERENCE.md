@@ -16,6 +16,32 @@
 
 ---
 
+### 🔐 AUTHENTICATION - JWT (NUEVO)
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/token/` | 🔑 Obtener access + refresh tokens | ❌ Public |
+| POST | `/api/auth/token/refresh/` | 🔄 Renovar access token | ❌ Public |
+| POST | `/api/auth/token/verify/` | ✅ Validar token | ❌ Public |
+| POST | `/api/auth/register/` | 👤 Registro de usuario | ❌ Public |
+| GET | `/api/auth/me/` | 👤 Usuario actual | ✅ Required |
+| GET | `/api/auth/menu/` | 📋 Menú dinámico | ✅ Required |
+| POST | `/api/auth/logout/` | 🚪 Cerrar sesión | ✅ Required |
+
+**Formato del token:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Respuesta de login:**
+```json
+{
+  "access": "eyJ...",  // Válido por 1 hora
+  "refresh": "eyJ..."  // Válido por 7 días
+}
+```
+
+---
+
 ### 📦 CATALOG - Productos y Categorías
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -126,22 +152,176 @@
 ---
 
 ### 📈 ANALYTICS - Reportes y Forecasting
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/analytics/sales/` | Listar hechos de ventas |
-| GET | `/api/analytics/sales/dashboard/` | 📊 Dashboard |
-| POST | `/api/analytics/sales/generate_report/` | Generar reporte |
-| | |
-| GET | `/api/analytics/forecasts/` | Listar forecasts |
-| POST | `/api/analytics/forecasts/` | Crear forecast |
-| POST | `/api/analytics/forecasts/{id}/predict/` | 🔮 Predecir ventas |
-| | |
-| GET | `/api/analytics/reports/` | Listar reportes |
-| POST | `/api/analytics/reports/` | Crear reporte |
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/analytics/sales/` | Listar hechos de ventas | ✅ Required |
+| GET | `/api/analytics/sales/dashboard/` | 📊 Dashboard | ✅ Required |
+| POST | `/api/analytics/sales/generate_report/` | Generar reporte | ✅ Required |
+| | | |
+| GET | `/api/analytics/forecasts/` | Listar forecasts | ✅ Required |
+| POST | `/api/analytics/forecasts/` | Crear forecast | ✅ Required |
+| POST | `/api/analytics/forecasts/{id}/predict/` | 🔮 Predecir ventas | ✅ Required |
+| | | |
+| GET | `/api/analytics/reports/` | Listar reportes | ✅ Required |
+| POST | `/api/analytics/reports/` | Crear reporte | ✅ Required |
+| **POST** | **`/api/analytics/reports/ai-report/`** | **🤖 Reporte con IA (NUEVO)** | **✅ Required** |
+
+**🤖 AI Reports - Formatos disponibles:**
+- `json` - Datos estructurados con interpretación IA
+- `csv` - Archivo CSV descargable
+- `excel` - Archivo .xlsx con estilos
+- `pdf` - Documento PDF formateado
 
 ---
 
-## 🔥 Flujo de Compra Completo
+## � Flujo de Autenticación JWT
+
+### 1️⃣ Login
+```http
+POST /api/auth/token/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+**Respuesta:**
+```json
+{
+  "access": "eyJhbGc...",
+  "refresh": "eyJhbGc..."
+}
+```
+
+### 2️⃣ Guardar Tokens
+```javascript
+// LocalStorage (React/Angular)
+localStorage.setItem('access_token', response.access);
+localStorage.setItem('refresh_token', response.refresh);
+
+// O en memoria/state management (más seguro)
+```
+
+### 3️⃣ Usar en Requests
+```javascript
+// Axios Interceptor
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+```
+
+### 4️⃣ Refresh Token (cuando expira)
+```http
+POST /api/auth/token/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "eyJhbGc..."
+}
+```
+
+**Respuesta:**
+```json
+{
+  "access": "eyJhbGc...",
+  "refresh": "eyJhbGc..."  // Nuevo refresh (rotación habilitada)
+}
+```
+
+### 5️⃣ Verificar Token
+```http
+POST /api/auth/token/verify/
+Content-Type: application/json
+
+{
+  "token": "eyJhbGc..."
+}
+```
+
+---
+
+## 🤖 Flujo de Reportes con IA
+
+### 1️⃣ Generar Reporte JSON
+```http
+POST /api/analytics/reports/ai-report/
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "query": "Muéstrame las ventas de los últimos 7 días",
+  "format": "json",
+  "limit": 100
+}
+```
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "sql": "SELECT date, SUM(revenue) as total FROM analytics_salefact...",
+    "columns": ["date", "total"],
+    "rows": [[...], [...]],
+    "interpretation": "Las ventas de los últimos 7 días muestran...",
+    "summary": {
+      "total_rows": 7,
+      "execution_time_ms": 234
+    },
+    "export_options": ["json", "csv", "excel", "pdf"]
+  }
+}
+```
+
+### 2️⃣ Exportar a Excel
+```http
+POST /api/analytics/reports/ai-report/
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "query": "Top 10 productos más vendidos",
+  "format": "excel",
+  "limit": 10
+}
+```
+
+**Respuesta:** Archivo `.xlsx` descargable
+
+### 3️⃣ Dry Run (solo generar SQL)
+```http
+POST /api/analytics/reports/ai-report/
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "query": "Total de ventas por categoría",
+  "format": "json",
+  "dry_run": true
+}
+```
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "message": "SQL generado (dry-run)",
+  "data": {
+    "sql": "SELECT c.name, SUM(s.revenue) FROM..."
+  }
+}
+```
+
+---
+
+## �🔥 Flujo de Compra Completo
 
 ### 1️⃣ Agregar al Carrito
 ```http

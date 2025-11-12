@@ -8,7 +8,9 @@ class User(AbstractUser):
     Permite agregar campos personalizados como foto, teléfono, etc.
     """
     phone = models.CharField(max_length=20, blank=True)
-    avatar = models.CharField(max_length=400, blank=True)
+    avatar = models.CharField(max_length=400, blank=True)  # URL pública de la imagen
+    avatar_s3_key = models.CharField(max_length=500, blank=True, null=True)
+    avatar_s3_bucket = models.CharField(max_length=100, blank=True, null=True)
     
     class Meta:
         db_table = 'administration_user'

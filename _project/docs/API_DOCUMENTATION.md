@@ -1,16 +1,18 @@
 # 📚 Documentación API - E-Commerce Backend
 
-**Versión:** 1.0  
+**Versión:** 2.0 (Con JWT y AI Reports)  
 **Base URL:** `http://127.0.0.1:8000`  
 **Swagger UI:** `http://127.0.0.1:8000/api/docs/`  
-**Fecha:** Noviembre 2025
+**Fecha:** 9 de Noviembre, 2025
 
 ---
 
-## 🔐 Autenticación
+## 🔐 Autenticación JWT
 
-Actualmente la API está configurada con `AllowAny` para desarrollo.  
-Para producción, se implementará autenticación JWT.
+**✅ Sistema JWT completamente implementado**
+
+La API utiliza JWT (JSON Web Tokens) para autenticación segura.  
+**Todos los endpoints requieren autenticación excepto:** login, register, catálogo público y healthcheck.
 
 ### Endpoints de Autenticación
 

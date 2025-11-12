@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=50)),
                 ('url', models.CharField(blank=True, max_length=120)),
                 ('order', models.PositiveIntegerField(default=0)),
-                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subs', to='security.resource')),
+                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subs', to='administration.resource')),
             ],
             options={
                 'verbose_name': 'Subrecurso',
@@ -94,9 +94,9 @@ class Migration(migrations.Migration):
             name='RoleResource',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='security.resource')),
-                ('role', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='permissions', to='security.role')),
-                ('subresource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='security.subresource')),
+                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='administration.resource')),
+                ('role', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='permissions', to='administration.role')),
+                ('subresource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='administration.subresource')),
             ],
             options={
                 'verbose_name': 'Permiso de Rol',

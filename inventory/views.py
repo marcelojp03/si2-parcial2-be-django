@@ -1,7 +1,6 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from django.db.models import Q, Sum, F
@@ -49,7 +48,6 @@ class WarehouseViewSet(viewsets.ModelViewSet):
     """
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
-    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['code', 'name', 'location']
     ordering_fields = ['code', 'name', 'created_at']
@@ -135,7 +133,6 @@ class InventoryViewSet(viewsets.ModelViewSet):
         'warehouse',
         'variant__product'
     ).all()
-    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['variant__code', 'variant__product__name', 'warehouse__name']
     ordering_fields = ['stock_on_hand', 'stock_available', 'min_stock']

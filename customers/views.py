@@ -1,6 +1,8 @@
 """
 Views para autenticación de clientes (Customer Authentication)
 """
+import base64
+import logging
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +13,9 @@ from django.contrib.auth import authenticate, get_user_model
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 
 from customers.models import Customer
+from apps.core.services.aws_s3 import upload_product_image, generate_presigned_url
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 from .serializers import (
@@ -112,6 +117,9 @@ class LoginView(APIView):
         }
     )
     def post(self, request):
+        from django.utils import timezone
+        from sales.models import Customer as SalesCustomer, Cart
+        
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -135,6 +143,10 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
+        # Actualizar last_login manualmente
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        
         # Verificar que sea un cliente (tiene Customer asociado)
         try:
             customer = Customer.objects.get(user=user)
@@ -143,6 +155,24 @@ class LoginView(APIView):
                 {'error': 'Customer profile not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        # Obtener o crear sales.Customer y Cart
+        # Esto es para compatibilidad con el sistema de órdenes
+        sales_customer, created = SalesCustomer.objects.get_or_create(
+            email=user.email,
+            defaults={
+                'full_name': user.get_full_name() or user.username,
+                'phone': customer.phone,
+                'ci_nit': ''
+            }
+        )
+        
+        # Obtener o crear el carrito
+        cart, cart_created = Cart.objects.get_or_create(
+            customer=sales_customer
+        )
+        
+        logger.info(f"Login exitoso: {user.username}, Cart ID: {cart.id}")
         
         # Generar tokens JWT
         refresh = RefreshToken.for_user(user)
@@ -156,6 +186,7 @@ class LoginView(APIView):
                 'city': customer.city,
                 'country': customer.country,
             },
+            'cart_id': cart.id,  # ID del carrito para usar en el frontend
             'tokens': {
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
@@ -311,3 +342,149 @@ class ChangePasswordView(APIView):
             {'message': 'Password changed successfully'},
             status=status.HTTP_200_OK
         )
+
+
+class UploadAvatarView(APIView):
+    """
+    Subir avatar del usuario (cliente o admin).
+    Acepta la imagen en base64 y la sube a S3.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=['Auth'],
+        summary='Upload avatar',
+        description='Upload user avatar image to S3. Send image as base64 string.',
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'image': {
+                        'type': 'string',
+                        'description': 'Image in base64 format (can include data:image/jpeg;base64, prefix or just the base64 string)'
+                    },
+                    'extension': {
+                        'type': 'string',
+                        'description': 'File extension (jpg, png, webp, etc.)',
+                        'default': 'jpg'
+                    }
+                },
+                'required': ['image'],
+                'example': {
+                    'image': 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAD...',
+                    'extension': 'jpg'
+                }
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description='Avatar uploaded successfully',
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value={
+                            'message': 'Avatar uploaded successfully',
+                            'avatar_url': 'https://si2-proyectos.s3.amazonaws.com/...',
+                            'avatar_s3_bucket': 'si2-proyectos',
+                            'avatar_s3_key': 'si2-ecommerce-avatars/user-123/...'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(description='Invalid image data or upload failed'),
+            401: OpenApiResponse(description='Authentication required')
+        }
+    )
+    def post(self, request):
+        try:
+            user = request.user
+            image_data = request.data.get('image')
+            extension = request.data.get('extension', 'jpg')
+            
+            if not image_data:
+                return Response(
+                    {'error': 'Image data is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Decodificar base64
+            try:
+                # Si viene con prefijo data:image/...;base64,
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                
+                # Decodificar base64 a bytes
+                image_bytes = base64.b64decode(image_data)
+                
+                if len(image_bytes) == 0:
+                    return Response(
+                        {'error': 'Invalid image data'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Validar tamaño (máximo 5MB)
+                max_size = 5 * 1024 * 1024  # 5MB
+                if len(image_bytes) > max_size:
+                    return Response(
+                        {'error': f'Image too large. Maximum size is 5MB, got {len(image_bytes) / (1024*1024):.2f}MB'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                logger.info(f"📸 Subiendo avatar para usuario {user.username}, tamaño: {len(image_bytes)} bytes")
+                
+            except Exception as e:
+                logger.error(f"Error decodificando base64: {e}")
+                return Response(
+                    {'error': f'Invalid base64 image data: {str(e)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Subir a S3 usando el servicio existente
+            # Usamos el user_id como "SKU" para organizar las imágenes
+            user_folder = f"user-{user.id}"
+            filename = f"avatar"
+            
+            s3_bucket, s3_key, error = upload_product_image(
+                imagen_bytes=image_bytes,
+                product_sku=user_folder,
+                filename=filename,
+                extension=extension,
+                max_reintentos=3
+            )
+            
+            if error:
+                logger.error(f"Error subiendo avatar a S3: {error}")
+                return Response(
+                    {'error': f'Failed to upload avatar: {error}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Generar URL firmada (válida por 7 días)
+            avatar_url = generate_presigned_url(s3_bucket, s3_key, expiration=604800)
+            
+            if not avatar_url:
+                logger.warning("No se pudo generar URL firmada, usando URL pública")
+                avatar_url = f"https://{s3_bucket}.s3.amazonaws.com/{s3_key}"
+            
+            # Actualizar usuario
+            user.avatar = avatar_url
+            user.avatar_s3_bucket = s3_bucket
+            user.avatar_s3_key = s3_key
+            user.save()
+            
+            logger.info(f"✅ Avatar actualizado para usuario {user.username}: {s3_key}")
+            
+            return Response({
+                'message': 'Avatar uploaded successfully',
+                'avatar_url': avatar_url,
+                'avatar_s3_bucket': s3_bucket,
+                'avatar_s3_key': s3_key,
+                'user': UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error inesperado en upload avatar: {e}", exc_info=True)
+            return Response(
+                {'error': f'Unexpected error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
