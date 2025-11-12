@@ -74,3 +74,9 @@ fixtures/temp_*
 # Datasets
 dataset/
 dataset2/
+
+# Scripts de prueba con credenciales
+test_*.ps1
+test_*.py
+create_test_users.py
+check_stats.py
