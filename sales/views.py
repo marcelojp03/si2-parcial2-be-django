@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db import transaction
 from django.utils import timezone
-from .models import Customer, Address, Cart, CartItem, Order, OrderItem, Payment
+from decimal import Decimal
+import uuid
+from .models import Address, Cart, CartItem, Order, OrderItem, Payment
+from customers.models import Customer
 from .serializers import (
-    CustomerSerializer,
     AddressSerializer,
     CartSerializer,
     CartItemSerializer,
@@ -17,30 +19,6 @@ from .serializers import (
 )
 from catalog.models import ProductVariant
 from inventory.models import Inventory
-
-
-@extend_schema_view(
-    list=extend_schema(summary="Listar clientes", tags=['Sales']),
-    retrieve=extend_schema(summary="Obtener cliente", tags=['Sales']),
-    create=extend_schema(summary="Crear cliente", tags=['Sales']),
-    update=extend_schema(summary="Actualizar cliente", tags=['Sales'])
-)
-class CustomerViewSet(viewsets.ModelViewSet):
-    """ViewSet para gestionar clientes"""
-    queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['ci_nit', 'first_name', 'last_name', 'email']
-    ordering = ['-created_at']
-    
-    @extend_schema(summary="Pedidos del cliente", tags=['Sales'])
-    @action(detail=True, methods=['get'])
-    def orders(self, request, pk=None):
-        """Obtiene los pedidos de un cliente"""
-        customer = self.get_object()
-        orders = customer.orders.all().order_by('-created_at')
-        serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data)
 
 
 @extend_schema_view(
@@ -93,11 +71,11 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                 cart_item, created = CartItem.objects.get_or_create(
                     cart=cart,
                     variant=variant,
-                    defaults={'quantity': quantity, 'price': variant.price}
+                    defaults={'qty': quantity, 'unit_price': variant.price}
                 )
                 
                 if not created:
-                    cart_item.quantity += quantity
+                    cart_item.qty += quantity
                     cart_item.save()
                 
                 cart_serializer = CartSerializer(cart)
@@ -116,12 +94,20 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
     def remove_item(self, request, pk=None, item_id=None):
         """Elimina un item del carrito"""
         cart = self.get_object()
+        
+        # Validar que item_id no sea undefined o None
+        if not item_id or item_id == 'undefined':
+            return Response(
+                {'error': 'Item ID is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         try:
             cart_item = cart.items.get(id=item_id)
             cart_item.delete()
             cart_serializer = CartSerializer(cart)
             return Response(cart_serializer.data)
-        except CartItem.DoesNotExist:
+        except (CartItem.DoesNotExist, ValueError):
             return Response(
                 {'error': 'Item no encontrado'},
                 status=status.HTTP_404_NOT_FOUND
@@ -143,7 +129,10 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
     )
     @action(detail=True, methods=['post'])
     def checkout(self, request, pk=None):
-        """Crea un pedido desde el carrito"""
+        """
+        Crea un pedido desde el carrito.
+        Acepta shipping_address_id (dirección existente) o shipping_address (crear nueva)
+        """
         cart = self.get_object()
         serializer = OrderCreateSerializer(data=request.data)
         
@@ -158,13 +147,34 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
         
         try:
             with transaction.atomic():
+                # Determinar o crear la dirección de envío
+                shipping_address_id = serializer.validated_data.get('shipping_address_id')
+                shipping_address_data = serializer.validated_data.get('shipping_address')
+                
+                if shipping_address_data:
+                    # Crear nueva dirección
+                    address = Address.objects.create(
+                        customer_id=serializer.validated_data['customer_id'],
+                        line1=shipping_address_data['line1'],
+                        city=shipping_address_data['city'],
+                        state=shipping_address_data.get('state', ''),
+                        zip=shipping_address_data.get('zip', ''),
+                        notes=shipping_address_data.get('notes', ''),
+                        is_default=shipping_address_data.get('is_default', False)
+                    )
+                    shipping_address_id = address.id
+                
+                # Generar número de orden único (max 20 chars)
+                # Formato: YYYYMMDD-XXXXXXXX (8+1+8 = 17 chars)
+                order_number = f"{timezone.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+                
                 # Crear pedido
                 order = Order.objects.create(
                     customer_id=serializer.validated_data['customer_id'],
-                    shipping_address_id=serializer.validated_data['shipping_address_id'],
+                    shipping_address_id=shipping_address_id,
+                    order_number=order_number,
                     status='CREATED',
-                    payment_status='PENDING',
-                    notes=serializer.validated_data.get('notes', '')
+                    payment_status='PENDING'
                 )
                 
                 # Crear items del pedido y reservar stock
@@ -173,40 +183,112 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                     OrderItem.objects.create(
                         order=order,
                         variant=cart_item.variant,
-                        quantity=cart_item.quantity,
-                        price=cart_item.price
+                        qty=cart_item.qty,
+                        unit_price=cart_item.unit_price
                     )
-                    subtotal += cart_item.quantity * cart_item.price
+                    subtotal += cart_item.qty * cart_item.unit_price
                     
                     # Reservar stock del primer almacén disponible
                     inventory = Inventory.objects.filter(
                         variant=cart_item.variant,
-                        stock_on_hand__gte=cart_item.quantity
+                        stock_on_hand__gte=cart_item.qty
                     ).first()
                     
                     if inventory:
-                        inventory.reserve_stock(cart_item.quantity)
+                        inventory.reserve_stock(cart_item.qty)
                 
-                # Calcular totales
+                # Calcular totales (usando los nombres de campos correctos del modelo)
+                tax = subtotal * Decimal('0.13')  # 13% IVA (Bolivia)
                 order.subtotal = subtotal
-                order.tax = subtotal * 0.13  # 13% IVA
-                order.total = order.subtotal + order.tax + order.shipping_cost - order.discount
+                order.shipping_total = Decimal(str(serializer.validated_data.get('shipping_cost', 0)))
+                order.discount_total = Decimal(str(serializer.validated_data.get('discount', 0)))
+                order.total = subtotal + tax + order.shipping_total - order.discount_total
                 order.save()
                 
                 # Crear pago
-                Payment.objects.create(
+                payment_provider = serializer.validated_data.get('payment_provider', 'MOCK')
+                
+                payment = Payment.objects.create(
                     order=order,
-                    method=serializer.validated_data['payment_method'],
-                    provider=serializer.validated_data.get('payment_provider', 'MOCK'),
+                    provider=payment_provider,
                     amount=order.total,
                     status='PENDING'
                 )
+                
+                # VPAY: Generar QR de pago
+                vpay_qr_data = None
+                if payment_provider == 'VPAY':
+                    from apps.core.services.vpay_service import generate_vpay_qr
+                    
+                    vpay_result = generate_vpay_qr(order)
+                    
+                    if vpay_result['success']:
+                        # Guardar QR ID en payment.provider_ref
+                        payment.provider_ref = vpay_result['qr_id']
+                        payment.save()
+                        
+                        # Preparar datos para enviar al frontend
+                        vpay_qr_data = {
+                            'qr_id': vpay_result['qr_id'],
+                            'qr_image': vpay_result['qr_image'],  # Base64
+                            'expiration_date': vpay_result['expiration_date']
+                        }
+                        
+                        logger.info(f"✅ QR VPAY generado para pedido {order.order_number}")
+                    else:
+                        # Si falla generar QR, cancelar pedido
+                        order.status = 'CANCELLED'
+                        order.save()
+                        return Response(
+                            {'error': f"Error generando QR VPAY: {vpay_result.get('error')}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        )
+                
+                # AUTO-CONFIRMAR pago para métodos simulados
+                # VPAY NO auto-confirma, espera polling del frontend
+                should_auto_confirm = payment_provider in ['MOCK', 'QR']
+                
+                if should_auto_confirm:
+                    # Confirmar pago
+                    payment.status = 'SUCCESS'
+                    payment.paid_at = timezone.now()
+                    payment.save()
+                    
+                    # Actualizar estado del pedido
+                    order.status = 'CONFIRMED'
+                    order.payment_status = 'PAID'
+                    order.save()
+                    
+                    # Confirmar venta: decrementar stock_on_hand y stock_reserved
+                    for order_item in order.items.all():
+                        inventory = Inventory.objects.filter(
+                            variant=order_item.variant
+                        ).first()
+                        
+                        if inventory:
+                            inventory.confirm_sale(order_item.qty)
+                    
+                    # Enviar email de confirmación
+                    try:
+                        from apps.core.services.email_service import send_order_confirmation_email
+                        send_order_confirmation_email(order)
+                    except Exception as email_error:
+                        # No fallar el checkout si falla el email
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.warning(f"Error enviando email de confirmación: {email_error}")
                 
                 # Vaciar carrito
                 cart.items.all().delete()
                 
                 order_serializer = OrderSerializer(order)
-                return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+                response_data = order_serializer.data
+                
+                # Si es VPAY, agregar datos del QR a la respuesta
+                if vpay_qr_data:
+                    response_data['vpay_qr'] = vpay_qr_data
+                
+                return Response(response_data, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
             return Response(
@@ -224,7 +306,7 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Order.objects.prefetch_related('items__variant__product', 'payment').all()
     serializer_class = OrderSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['order_number', 'customer__first_name', 'customer__last_name']
+    search_fields = ['order_number', 'customer__user__first_name', 'customer__user__last_name', 'customer__user__email']
     ordering = ['-created_at']
     
     def get_queryset(self):
@@ -342,6 +424,118 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             return Response(
                 {'error': f'Error al confirmar pago: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @extend_schema(
+        summary="Consultar estado de pago VPAY",
+        tags=['Sales'],
+        description="Consulta el estado del QR de VPAY y auto-confirma si está pagado (status=PAG)"
+    )
+    @action(detail=True, methods=['get'], url_path='check-vpay-payment')
+    def check_vpay_payment(self, request, pk=None):
+        """
+        Endpoint de polling para verificar el estado del pago VPAY.
+        Frontend debe llamar cada 3-5 segundos hasta que status sea 'PAID'.
+        """
+        try:
+            order = Order.objects.select_related('payment').get(pk=pk)
+            
+            # Validar que el pedido tiene un pago con VPAY
+            if not hasattr(order, 'payment'):
+                return Response(
+                    {'error': 'Pedido sin pago asociado'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            payment = order.payment
+            
+            if payment.provider != 'VPAY':
+                return Response(
+                    {'error': 'Este endpoint solo funciona para pagos VPAY'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Si ya está confirmado, retornar estado
+            if payment.status == 'SUCCESS':
+                return Response({
+                    'payment_status': 'PAID',
+                    'order_status': order.status,
+                    'paid_at': payment.paid_at,
+                    'message': 'Pago ya confirmado'
+                })
+            
+            # Verificar que tiene QR ID
+            if not payment.provider_ref:
+                return Response(
+                    {'error': 'Pago VPAY sin QR ID'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Consultar estado en VPAY
+            from apps.core.services.vpay_service import check_vpay_payment_status
+            
+            result = check_vpay_payment_status(payment.provider_ref)
+            
+            if not result['success']:
+                return Response(
+                    {'error': f"Error consultando VPAY: {result.get('error')}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Si está pagado (status=PAG), auto-confirmar
+            if result['is_paid']:
+                with transaction.atomic():
+                    # Confirmar pago
+                    payment.status = 'SUCCESS'
+                    payment.paid_at = timezone.now()
+                    payment.save()
+                    
+                    # Actualizar pedido
+                    order.status = 'CONFIRMED'
+                    order.payment_status = 'PAID'
+                    order.save()
+                    
+                    # Confirmar venta (decrementar stock)
+                    for order_item in order.items.all():
+                        inventory = Inventory.objects.filter(
+                            variant=order_item.variant
+                        ).first()
+                        
+                        if inventory:
+                            inventory.confirm_sale(order_item.qty)
+                    
+                    # Enviar email de confirmación
+                    try:
+                        from apps.core.services.email_service import send_order_confirmation_email
+                        send_order_confirmation_email(order)
+                    except Exception as email_error:
+                        logger.warning(f"Error enviando email: {email_error}")
+                
+                return Response({
+                    'payment_status': 'PAID',
+                    'order_status': 'CONFIRMED',
+                    'paid_at': payment.paid_at,
+                    'message': '¡Pago confirmado exitosamente!'
+                })
+            
+            # Aún pendiente (status=PEN)
+            return Response({
+                'payment_status': 'PENDING',
+                'order_status': order.status,
+                'vpay_status': result['status'],
+                'message': 'Esperando confirmación de pago'
+            })
+            
+        except Order.DoesNotExist:
+            return Response(
+                {'error': 'Pedido no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error verificando pago VPAY: {e}")
+            return Response(
+                {'error': f'Error interno: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     

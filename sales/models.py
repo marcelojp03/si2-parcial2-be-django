@@ -1,33 +1,13 @@
 from django.db import models
+from django.conf import settings
 from catalog.models import ProductVariant
-
-
-class Customer(models.Model):
-    """
-    Cliente del ecommerce.
-    Puede tener múltiples direcciones.
-    """
-    full_name = models.CharField(max_length=160)
-    email = models.EmailField(blank=True)
-    phone = models.CharField(max_length=40, blank=True)
-    ci_nit = models.CharField(max_length=20, blank=True, verbose_name="CI/NIT")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'sales_customer'
-        verbose_name = 'Cliente'
-        verbose_name_plural = 'Clientes'
-
-    def __str__(self):
-        return self.full_name
 
 
 class Address(models.Model):
     """
     Dirección de envío/facturación de un cliente.
     """
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="addresses")
+    customer = models.ForeignKey('customers.Customer', on_delete=models.CASCADE, related_name="addresses")
     line1 = models.CharField(max_length=200, verbose_name="Dirección")
     city = models.CharField(max_length=100, verbose_name="Ciudad")
     state = models.CharField(max_length=100, blank=True, verbose_name="Departamento")
@@ -48,7 +28,7 @@ class Cart(models.Model):
     """
     Carrito de compras de un cliente.
     """
-    customer = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name="cart")
+    customer = models.OneToOneField('customers.Customer', on_delete=models.CASCADE, related_name="cart")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -58,7 +38,7 @@ class Cart(models.Model):
         verbose_name_plural = 'Carritos'
 
     def __str__(self):
-        return f"Carrito de {self.customer.full_name}"
+        return f"Carrito de {self.customer.user.get_full_name()}"
 
 
 class CartItem(models.Model):
@@ -106,7 +86,7 @@ class Order(models.Model):
         ('REFUNDED', 'Reembolsado'),
     ]
     
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="orders")
+    customer = models.ForeignKey('customers.Customer', on_delete=models.PROTECT, related_name="orders")
     order_number = models.CharField(max_length=20, unique=True)
     currency = models.CharField(max_length=8, default="BOB")
     status = models.CharField(max_length=20, default="CREATED", choices=STATUS_CHOICES)
@@ -138,7 +118,7 @@ class Order(models.Model):
         ]
 
     def __str__(self):
-        return f"Pedido {self.order_number} - {self.customer.full_name}"
+        return f"Pedido {self.order_number} - {self.customer.user.get_full_name()}"
 
 
 class OrderItem(models.Model):

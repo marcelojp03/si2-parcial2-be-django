@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Recurso',
                 'verbose_name_plural': 'Recursos',
-                'db_table': 'security_resource',
+                'db_table': 'administration_resource',
                 'ordering': ['order', 'name'],
             },
         ),
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Usuario',
                 'verbose_name_plural': 'Usuarios',
-                'db_table': 'security_user',
+                'db_table': 'administration_user',
             },
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Rol',
                 'verbose_name_plural': 'Roles',
-                'db_table': 'security_role',
+                'db_table': 'administration_role',
             },
         ),
         migrations.CreateModel(
@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Subrecurso',
                 'verbose_name_plural': 'Subrecursos',
-                'db_table': 'security_subresource',
+                'db_table': 'administration_subresource',
                 'ordering': ['order', 'name'],
             },
         ),
@@ -101,7 +101,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Permiso de Rol',
                 'verbose_name_plural': 'Permisos de Roles',
-                'db_table': 'security_role_resource',
+                'db_table': 'administration_role_resource',
                 'unique_together': {('role', 'resource', 'subresource')},
             },
         ),

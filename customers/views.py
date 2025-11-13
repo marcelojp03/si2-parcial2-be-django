@@ -118,7 +118,7 @@ class LoginView(APIView):
     )
     def post(self, request):
         from django.utils import timezone
-        from sales.models import Customer as SalesCustomer, Cart
+        from sales.models import Cart
         
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -156,23 +156,12 @@ class LoginView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Obtener o crear sales.Customer y Cart
-        # Esto es para compatibilidad con el sistema de órdenes
-        sales_customer, created = SalesCustomer.objects.get_or_create(
-            email=user.email,
-            defaults={
-                'full_name': user.get_full_name() or user.username,
-                'phone': customer.phone,
-                'ci_nit': ''
-            }
-        )
-        
-        # Obtener o crear el carrito
+        # Obtener o crear el carrito directamente con customers.Customer
         cart, cart_created = Cart.objects.get_or_create(
-            customer=sales_customer
+            customer=customer
         )
         
-        logger.info(f"Login exitoso: {user.username}, Cart ID: {cart.id}")
+        logger.info(f"Login exitoso: {user.username}, Customer ID: {customer.id}, Cart ID: {cart.id}")
         
         # Generar tokens JWT
         refresh = RefreshToken.for_user(user)

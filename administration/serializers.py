@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, Role, Resource, Subresource, RoleResource
 
 
@@ -95,20 +96,20 @@ class AdminLoginSerializer(serializers.Serializer):
 
 
 class SubresourceSerializer(serializers.ModelSerializer):
-    """Serializer para Subrecursos"""
+    """Serializer para Subrecursos del menú"""
     
     class Meta:
         model = Subresource
-        fields = ['id', 'resource', 'name', 'endpoint', 'method']
+        fields = ['id', 'name', 'description', 'url', 'icon']
 
 
 class ResourceSerializer(serializers.ModelSerializer):
-    """Serializer para Recursos"""
-    subresources = SubresourceSerializer(many=True, read_only=True)
+    """Serializer para Recursos del menú"""
+    subresources = SubresourceSerializer(many=True, read_only=True, source='subs')
     
     class Meta:
         model = Resource
-        fields = ['id', 'name', 'icon', 'route', 'subresources']
+        fields = ['id', 'name', 'description', 'icon', 'subresources']
 
 
 class RoleResourceSerializer(serializers.ModelSerializer):
@@ -118,26 +119,57 @@ class RoleResourceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = RoleResource
-        fields = [
-            'id', 'role', 'resource', 'resource_name',
-            'subresource', 'subresource_name', 'can_view',
-            'can_create', 'can_update', 'can_delete'
-        ]
+        fields = ['id', 'role', 'resource', 'resource_name', 'subresource', 'subresource_name']
 
 
 class RoleSerializer(serializers.ModelSerializer):
     """Serializer para Roles"""
-    permissions = RoleResourceSerializer(many=True, read_only=True, source='role_resources')
+    permissions = RoleResourceSerializer(many=True, read_only=True)
     
     class Meta:
         model = Role
         fields = ['id', 'name', 'description', 'permissions']
 
 
-class MenuSerializer(serializers.Serializer):
-    """Serializer para el menú dinámico del usuario"""
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    icon = serializers.CharField()
-    route = serializers.CharField()
-    subresources = serializers.ListField()
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Serializer personalizado para JWT que acepta email o username.
+    Compatible con el comportamiento del login de clientes.
+    """
+    username_field = 'username'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacer que el campo username acepte email también
+        self.fields[self.username_field] = serializers.CharField(
+            help_text='Username o email del usuario'
+        )
+    
+    def validate(self, attrs):
+        username_or_email = attrs.get('username')
+        password = attrs.get('password')
+        
+        # Intentar autenticar con username
+        user = authenticate(username=username_or_email, password=password)
+        
+        # Si falla, intentar buscar por email
+        if user is None:
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                pass
+        
+        if user is None:
+            raise serializers.ValidationError('Credenciales inválidas')
+        
+        if not user.is_active:
+            raise serializers.ValidationError('Usuario inactivo')
+        
+        # Establecer el usuario para que TokenObtainPairSerializer genere los tokens
+        attrs['username'] = user.username
+        
+        # Llamar al validate del padre para generar los tokens
+        data = super().validate(attrs)
+        
+        return data

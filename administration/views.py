@@ -2,6 +2,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import login, logout
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from ecommerce.responses import ApiResponse
@@ -14,7 +15,7 @@ from .serializers import (
     ResourceSerializer,
     SubresourceSerializer,
     RoleResourceSerializer,
-    MenuSerializer
+    CustomTokenObtainPairSerializer,
 )
 
 
@@ -150,6 +151,14 @@ def register_view(request):
     return ApiResponse.validation_error(serializer.errors)
 
 
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Vista JWT personalizada que acepta email o username.
+    Compatible con el login de clientes.
+    """
+    serializer_class = CustomTokenObtainPairSerializer
+
+
 @extend_schema(
     summary="Usuario actual",
     description="Obtiene la información del usuario autenticado",
@@ -167,7 +176,7 @@ def current_user_view(request):
 @extend_schema(
     summary="Menú del usuario",
     description="Obtiene el menú dinámico basado en permisos del usuario",
-    responses={200: MenuSerializer(many=True)},
+    responses={200: ResourceSerializer(many=True)},
     tags=['Auth']
 )
 @api_view(['GET'])
@@ -305,3 +314,98 @@ class RoleResourceViewSet(viewsets.ModelViewSet):
         if role_id:
             queryset = queryset.filter(role_id=role_id)
         return queryset
+
+
+@extend_schema(
+    summary="Obtener menú dinámico",
+    description="Construye el menú del admin basado en los roles y permisos del usuario autenticado",
+    responses={200: ResourceSerializer(many=True)},
+    tags=['Menu']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_menu(request):
+    """
+    Endpoint que construye el menú dinámico para el usuario.
+    Retorna los recursos y subrecursos permitidos según sus roles.
+    """
+    try:
+        user = request.user
+        
+        # Obtener grupos (roles) del usuario
+        user_groups = user.groups.all()
+        
+        if not user_groups:
+            return Response({
+                'success': True,
+                'message': 'Usuario sin roles asignados',
+                'data': []
+            })
+        
+        # Obtener roles asociados a los grupos
+        role_ids = []
+        for group in user_groups:
+            if hasattr(group, 'role'):
+                role_ids.append(group.role.id)
+        
+        if not role_ids:
+            return Response({
+                'success': True,
+                'message': 'Sin recursos asignados',
+                'data': []
+            })
+        
+        # Obtener permisos (RoleResource) de esos roles
+        role_resources = RoleResource.objects.filter(
+            role_id__in=role_ids
+        ).select_related('resource', 'subresource')
+        
+        # Agrupar por recurso
+        resources_dict = {}
+        
+        for rr in role_resources:
+            resource_id = rr.resource.id
+            
+            if resource_id not in resources_dict:
+                resources_dict[resource_id] = {
+                    'id': rr.resource.id,
+                    'name': rr.resource.name,
+                    'description': rr.resource.description,
+                    'icon': rr.resource.icon,
+                    'order': rr.resource.order,
+                    'subresources': []
+                }
+            
+            # Agregar subrecurso si no está duplicado
+            subresource_data = {
+                'id': rr.subresource.id,
+                'name': rr.subresource.name,
+                'description': rr.subresource.description,
+                'url': rr.subresource.url,
+                'icon': rr.subresource.icon
+            }
+            
+            # Evitar duplicados
+            if subresource_data not in resources_dict[resource_id]['subresources']:
+                resources_dict[resource_id]['subresources'].append(subresource_data)
+        
+        # Convertir a lista y ordenar
+        menu_list = list(resources_dict.values())
+        menu_list.sort(key=lambda x: (x['order'], x['name']))
+        
+        # Ordenar subrecursos dentro de cada recurso
+        for resource in menu_list:
+            resource['subresources'].sort(key=lambda x: x['name'])
+        
+        return Response({
+            'success': True,
+            'message': 'Menú construido',
+            'data': menu_list
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Error al construir menú: {str(e)}',
+            'data': []
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

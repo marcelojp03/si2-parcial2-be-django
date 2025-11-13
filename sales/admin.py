@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer, Address, Cart, CartItem, Order, OrderItem, Payment
+from .models import Address, Cart, CartItem, Order, OrderItem, Payment
 
 
 class AddressInline(admin.TabularInline):
@@ -7,19 +7,11 @@ class AddressInline(admin.TabularInline):
     extra = 1
 
 
-@admin.register(Customer)
-class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['full_name', 'email', 'phone', 'ci_nit', 'is_active', 'created_at']
-    list_filter = ['is_active']
-    search_fields = ['full_name', 'email', 'phone', 'ci_nit']
-    inlines = [AddressInline]
-
-
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['customer', 'city', 'state', 'is_default']
     list_filter = ['city', 'state', 'is_default']
-    search_fields = ['customer__full_name', 'city', 'line1']
+    search_fields = ['customer__user__username', 'customer__user__email', 'city', 'line1']
 
 
 class CartItemInline(admin.TabularInline):
@@ -30,14 +22,14 @@ class CartItemInline(admin.TabularInline):
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
     list_display = ['customer', 'created_at', 'updated_at']
-    search_fields = ['customer__full_name']
+    search_fields = ['customer__user__username', 'customer__user__email']
     inlines = [CartItemInline]
 
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ['cart', 'variant', 'qty', 'unit_price', 'subtotal', 'added_at']
-    search_fields = ['cart__customer__full_name', 'variant__code']
+    search_fields = ['cart__customer__user__username', 'cart__customer__user__email', 'variant__code']
 
 
 class OrderItemInline(admin.TabularInline):
@@ -53,7 +45,7 @@ class OrderAdmin(admin.ModelAdmin):
         'total', 'created_at'
     ]
     list_filter = ['status', 'payment_status', 'created_at']
-    search_fields = ['order_number', 'customer__full_name']
+    search_fields = ['order_number', 'customer__user__username', 'customer__user__email']
     readonly_fields = ['order_number', 'created_at', 'updated_at']
     inlines = [OrderItemInline]
 

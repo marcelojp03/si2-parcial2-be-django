@@ -1,0 +1,63 @@
+# .dockerignore
+# Excluir archivos innecesarios de la imagen Docker
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dataset
+dataset/
+dataset2/
+
+# Scripts de testing
+test_*.py
+test_*.ps1
+*.ps1
+
+# Documentación de desarrollo
+*.md
+!README.md
+
+# Archivos temporales
+*.tmp
+*.bak
+*.pyc

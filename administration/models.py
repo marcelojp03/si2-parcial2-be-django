@@ -66,7 +66,9 @@ class Subresource(models.Model):
     """
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name="subs")
     name = models.CharField(max_length=50)
+    description = models.CharField(max_length=200, blank=True)
     url = models.CharField(max_length=120, blank=True)
+    icon = models.CharField(max_length=50, blank=True)
     order = models.PositiveIntegerField(default=0)
     
     class Meta:

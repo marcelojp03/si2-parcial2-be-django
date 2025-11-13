@@ -192,7 +192,7 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
     
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_LIFETIME': timedelta(hours=8),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
@@ -268,3 +268,13 @@ CORS_ALLOW_METHODS = [
 # Media Files (uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Email Configuration (Turbo SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'pro.eu.turbo-smtp.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = '1200a91cedc0cac41b08'
+EMAIL_HOST_PASSWORD = 'pSPJhX9oMtzmAbBjckie'
+DEFAULT_FROM_EMAIL = 'marcelojp03@gmail.com'  # Email verificado en Turbo SMTP
