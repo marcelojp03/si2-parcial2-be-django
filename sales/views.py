@@ -6,6 +6,15 @@ from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Configuración de costos y reglas de negocio
+TAX_RATE = Decimal('0.13')  # IVA 13% (Bolivia)
+FREE_SHIPPING_THRESHOLD = Decimal('200')  # Envío gratis si subtotal >= 200 BOB
+SHIPPING_COST = Decimal('30')  # Costo de envío estándar
+
 from .models import Address, Cart, CartItem, Order, OrderItem, Payment
 from customers.models import Customer
 from .serializers import (
@@ -48,6 +57,45 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet para gestionar carritos"""
     queryset = Cart.objects.prefetch_related('items__variant__product').all()
     serializer_class = CartSerializer
+    
+    @extend_schema(
+        summary="Obtener o crear carrito activo del customer",
+        tags=['Sales'],
+        description="Retorna el carrito activo (con items) del customer o crea uno nuevo si está vacío"
+    )
+    @action(detail=False, methods=['get'], url_path='get-or-create/(?P<customer_id>[^/.]+)')
+    def get_or_create_cart(self, request, customer_id=None):
+        """
+        Obtiene el carrito activo del customer o crea uno nuevo.
+        
+        Lógica:
+        - Busca un carrito con items para el customer
+        - Si no existe o está vacío, crea uno nuevo
+        - Retorna el carrito con todos sus items
+        """
+        try:
+            # Buscar carrito con items del customer
+            cart = Cart.objects.filter(
+                customer_id=customer_id
+            ).prefetch_related('items__variant__product').first()
+            
+            # Si no existe o está vacío, crear uno nuevo
+            if not cart or not cart.items.exists():
+                if cart and not cart.items.exists():
+                    logger.info(f"Carrito {cart.id} está vacío, creando uno nuevo para customer {customer_id}")
+                
+                cart = Cart.objects.create(customer_id=customer_id)
+                logger.info(f"Nuevo carrito creado: {cart.id} para customer {customer_id}")
+            
+            serializer = CartSerializer(cart)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo/creando carrito para customer {customer_id}: {e}")
+            return Response(
+                {'error': f'Error al obtener carrito: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @extend_schema(
         summary="Agregar item al carrito",
@@ -123,6 +171,69 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(cart_serializer.data)
     
     @extend_schema(
+        summary="Calcular totales del carrito",
+        tags=['Sales'],
+        description="Calcula subtotal, IVA, costo de envío, descuento y total antes del checkout"
+    )
+    @action(detail=True, methods=['get'], url_path='calculate-totals')
+    def calculate_totals(self, request, pk=None):
+        """
+        Calcula los totales del carrito antes del checkout.
+        
+        Reglas de negocio:
+        - IVA: 13% sobre el subtotal
+        - Envío: Gratis si subtotal >= 200 BOB, sino 30 BOB
+        - Descuento: 0 por ahora (futuro: sistema de cupones)
+        
+        Returns:
+            {
+                "subtotal": 180.00,
+                "tax": 23.40,
+                "shipping_cost": 30.00,
+                "discount": 0.00,
+                "total": 233.40
+            }
+        """
+        cart = self.get_object()
+        
+        if not cart.items.exists():
+            logger.warning(f"Intento de calcular totales en carrito vacío: Cart ID {pk}")
+            return Response(
+                {
+                    'error': 'El carrito está vacío',
+                    'detail': 'El carrito no tiene productos. Agrega productos antes de proceder al checkout.',
+                    'cart_id': cart.id,
+                    'items_count': 0
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Calcular subtotal
+        subtotal = Decimal('0')
+        for item in cart.items.all():
+            subtotal += item.qty * item.unit_price
+        
+        # Calcular IVA
+        tax = subtotal * TAX_RATE
+        
+        # Calcular costo de envío (gratis si supera el umbral)
+        shipping_cost = Decimal('0') if subtotal >= FREE_SHIPPING_THRESHOLD else SHIPPING_COST
+        
+        # Descuento (futuro: sistema de cupones)
+        discount = Decimal('0')
+        
+        # Total
+        total = subtotal + tax + shipping_cost - discount
+        
+        return Response({
+            'subtotal': float(subtotal),
+            'tax': float(tax),
+            'shipping_cost': float(shipping_cost),
+            'discount': float(discount),
+            'total': float(total)
+        })
+    
+    @extend_schema(
         summary="Crear pedido desde carrito",
         request=OrderCreateSerializer,
         tags=['Sales']
@@ -133,6 +244,20 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
         Crea un pedido desde el carrito.
         Acepta shipping_address_id (dirección existente) o shipping_address (crear nueva)
         """
+        # ============================================================
+        # 🔵 CHECKOUT REQUEST
+        # ============================================================
+        print(f"\n{'='*60}")
+        print(f"🔵 CHECKOUT REQUEST")
+        print(f"{'='*60}")
+        print(f"Cart ID: {pk}")
+        print(f"Request Data: {request.data}")
+        print(f"Customer ID: {request.data.get('customer_id')}")
+        print(f"Payment Method: {request.data.get('payment_method')}")
+        print(f"Payment Provider: {request.data.get('payment_provider', 'MOCK')}")
+        print(f"Shipping Address ID: {request.data.get('shipping_address_id')}")
+        print(f"{'='*60}\n")
+        
         cart = self.get_object()
         serializer = OrderCreateSerializer(data=request.data)
         
@@ -174,7 +299,8 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                     shipping_address_id=shipping_address_id,
                     order_number=order_number,
                     status='CREATED',
-                    payment_status='PENDING'
+                    payment_status='PENDING',
+                    notes=serializer.validated_data.get('notes', '')
                 )
                 
                 # Crear items del pedido y reservar stock
@@ -197,12 +323,26 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                     if inventory:
                         inventory.reserve_stock(cart_item.qty)
                 
-                # Calcular totales (usando los nombres de campos correctos del modelo)
-                tax = subtotal * Decimal('0.13')  # 13% IVA (Bolivia)
+                # Calcular totales (usando configuración centralizada)
+                tax = subtotal * TAX_RATE
                 order.subtotal = subtotal
                 order.shipping_total = Decimal(str(serializer.validated_data.get('shipping_cost', 0)))
                 order.discount_total = Decimal(str(serializer.validated_data.get('discount', 0)))
                 order.total = subtotal + tax + order.shipping_total - order.discount_total
+                
+                # ============================================================
+                # 📊 CÁLCULO DE TOTALES
+                # ============================================================
+                print(f"\n{'='*60}")
+                print(f"📊 CÁLCULO DE TOTALES")
+                print(f"{'='*60}")
+                print(f"Subtotal: Bs. {subtotal}")
+                print(f"IVA (13%): Bs. {tax}")
+                print(f"Envío: Bs. {order.shipping_total}")
+                print(f"Descuento: Bs. {order.discount_total}")
+                print(f"TOTAL: Bs. {order.total}")
+                print(f"{'='*60}\n")
+                
                 order.save()
                 
                 # Crear pago
@@ -274,12 +414,14 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                         send_order_confirmation_email(order)
                     except Exception as email_error:
                         # No fallar el checkout si falla el email
-                        import logging
-                        logger = logging.getLogger(__name__)
                         logger.warning(f"Error enviando email de confirmación: {email_error}")
+                    
+                    # ⚠️ SOLO vaciar carrito si el pago fue AUTO-CONFIRMADO
+                    cart.items.all().delete()
+                    logger.info(f"Carrito {cart.id} vaciado después de pago confirmado")
                 
-                # Vaciar carrito
-                cart.items.all().delete()
+                # ⚠️ Para VPAY: NO vaciar carrito aquí
+                # El carrito se vaciará cuando el pago sea confirmado vía polling
                 
                 order_serializer = OrderSerializer(order)
                 response_data = order_serializer.data
@@ -504,6 +646,15 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
                         
                         if inventory:
                             inventory.confirm_sale(order_item.qty)
+                    
+                    # 🛒 Vaciar carrito del customer (solo cuando el pago está confirmado)
+                    try:
+                        cart = Cart.objects.filter(customer=order.customer).first()
+                        if cart and cart.items.exists():
+                            cart.items.all().delete()
+                            logger.info(f"✅ Carrito {cart.id} vaciado después de pago VPAY confirmado")
+                    except Exception as cart_error:
+                        logger.warning(f"Error vaciando carrito después de pago: {cart_error}")
                     
                     # Enviar email de confirmación
                     try:

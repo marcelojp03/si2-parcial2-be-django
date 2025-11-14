@@ -102,6 +102,9 @@ class Order(models.Model):
     # Dirección de envío
     shipping_address = models.ForeignKey(Address, on_delete=models.PROTECT, null=True, blank=True)
     
+    # Notas/observaciones del cliente
+    notes = models.TextField(max_length=500, blank=True, null=True, help_text="Instrucciones de entrega o comentarios del cliente")
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -134,7 +134,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'id', 'order_number', 'customer', 'customer_name',
             'shipping_address', 'status', 'payment_status', 'currency',
             'subtotal', 'discount_total', 'shipping_total', 'total',
-            'items', 'payment', 'total_items',
+            'items', 'payment', 'total_items', 'notes',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['order_number', 'created_at', 'updated_at']
@@ -162,6 +162,20 @@ class OrderCreateSerializer(serializers.Serializer):
         choices=['STRIPE', 'PAYPAL', 'VPAY', 'MOCK', 'QR'],
         required=False,
         default='MOCK'
+    )
+    
+    # Campos opcionales para cálculo de totales
+    shipping_cost = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        required=False, 
+        default=0
+    )
+    discount = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        required=False, 
+        default=0
     )
     notes = serializers.CharField(max_length=500, required=False, allow_blank=True)
     
