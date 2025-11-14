@@ -36,18 +36,22 @@ PRODUCTS_BASE_PATH = 'si2-ecommerce-images'
 def _get_s3_client():
     """
     Crea y retorna un cliente S3 configurado.
-    Usa credenciales de AWS CLI profile o variables de entorno.
+    Usa IAM Role en producción (App Runner/EC2) o AWS profile local.
     """
     try:
-        # Obtener profile desde settings
-        profile = os.getenv('AWS_PROFILE', 'default')
         region = os.getenv('AWS_REGION', 'us-east-1')
+        profile = os.getenv('AWS_PROFILE')
         
-        # Crear sesión con profile
-        session = boto3.Session(profile_name=profile, region_name=region)
-        
-        # Crear cliente S3
-        s3_client = session.client('s3', config=AWS_CONFIG)
+        # En producción (App Runner/Lambda/EC2): usar IAM Role (no profile)
+        # En desarrollo local: usar profile
+        if profile:
+            logger.info(f"🔧 Usando AWS profile: {profile}")
+            session = boto3.Session(profile_name=profile, region_name=region)
+            s3_client = session.client('s3', config=AWS_CONFIG)
+        else:
+            # Sin profile = usar credenciales del IAM Role automáticamente
+            logger.info(f"🔧 Usando IAM Role (credenciales automáticas)")
+            s3_client = boto3.client('s3', region_name=region, config=AWS_CONFIG)
         
         return s3_client
         
