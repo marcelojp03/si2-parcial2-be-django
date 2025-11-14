@@ -43,10 +43,8 @@ ENV DJANGO_SETTINGS_MODULE=ecommerce.settings
 # Crear directorio para static files
 RUN mkdir -p /app/staticfiles
 
-# Exponer puerto
+# Exponer puerto configurado
 EXPOSE 1112
 
-# Comando por defecto: collectstatic + migrate + runserver
-CMD python manage.py collectstatic --noinput && \
-    python manage.py migrate --noinput && \
-    python manage.py runserver 0.0.0.0:1112
+# Usar script Python para mejor logging y manejo de errores
+CMD ["python", "entrypoint.py"]
