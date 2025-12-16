@@ -1,4 +1,4 @@
-# 📚 Documentación API - E-Commerce Backend
+# [*] Documentación API - E-Commerce Backend
 
 **Versión:** 2.0 (Con JWT y AI Reports)  
 **Base URL:** `http://127.0.0.1:8000`  
@@ -7,9 +7,9 @@
 
 ---
 
-## 🔐 Autenticación JWT
+## [*] Autenticación JWT
 
-**✅ Sistema JWT completamente implementado**
+**[OK] Sistema JWT completamente implementado**
 
 La API utiliza JWT (JSON Web Tokens) para autenticación segura.  
 **Todos los endpoints requieren autenticación excepto:** login, register, catálogo público y healthcheck.
@@ -59,7 +59,7 @@ Retorna el menú basado en los permisos del rol del usuario.
 
 ---
 
-## 📦 Módulo: CATALOG
+## [*] Módulo: CATALOG
 
 Gestión de categorías, atributos y productos.
 
@@ -300,7 +300,7 @@ GET /api/catalog/products/featured/
 
 ---
 
-## 📊 Módulo: INVENTORY
+## [*] Módulo: INVENTORY
 
 Gestión de almacenes e inventario.
 
@@ -796,12 +796,12 @@ Content-Type: application/json
 ```
 
 **Características:**
-- ✅ **Bloqueo pesimista** con `select_for_update()`
-- ✅ **Idempotencia** - Múltiples llamadas con la misma key no duplican la confirmación
-- ✅ **Validación de estado** - Solo permite confirmar pedidos en estado `CREATED`
-- ✅ **Bloqueo de inventario** - Bloquea todos los inventarios involucrados
-- ✅ **Validación de stock** - Verifica stock suficiente antes de confirmar
-- ✅ **Actualización atómica** - Descuenta `stock_on_hand` y `stock_reserved`
+- [OK] **Bloqueo pesimista** con `select_for_update()`
+- [OK] **Idempotencia** - Múltiples llamadas con la misma key no duplican la confirmación
+- [OK] **Validación de estado** - Solo permite confirmar pedidos en estado `CREATED`
+- [OK] **Bloqueo de inventario** - Bloquea todos los inventarios involucrados
+- [OK] **Validación de stock** - Verifica stock suficiente antes de confirmar
+- [OK] **Actualización atómica** - Descuenta `stock_on_hand` y `stock_reserved`
 
 **Respuesta:**
 ```json
@@ -839,10 +839,10 @@ POST /api/sales/orders/{id}/cancel/
 ```
 
 **Características:**
-- ✅ **Bloqueo pesimista** para evitar cancelaciones concurrentes
-- ✅ **Validación de estado** - No permite cancelar pedidos `SHIPPED` o `DELIVERED`
-- ✅ **Liberación de stock** - Devuelve el stock reservado al inventario
-- ✅ **Cancelación de pago** - Marca el pago como cancelado
+- [OK] **Bloqueo pesimista** para evitar cancelaciones concurrentes
+- [OK] **Validación de estado** - No permite cancelar pedidos `SHIPPED` o `DELIVERED`
+- [OK] **Liberación de stock** - Devuelve el stock reservado al inventario
+- [OK] **Cancelación de pago** - Marca el pago como cancelado
 
 **Respuesta:**
 ```json
@@ -860,7 +860,7 @@ POST /api/sales/orders/{id}/cancel/
 
 ---
 
-## 🔐 Módulo: SECURITY
+## [*] Módulo: SECURITY
 
 Gestión de usuarios, roles y permisos (RBAC).
 
@@ -1442,7 +1442,7 @@ Muestra la venta recién confirmada en métricas y reportes.
 
 ---
 
-## 📊 Códigos de Estado HTTP
+## [*] Códigos de Estado HTTP
 
 - `200 OK` - Solicitud exitosa
 - `201 Created` - Recurso creado exitosamente
@@ -1546,3 +1546,4 @@ IVA: **13%**
 **Django:** 5.2.7  
 **DRF:** 3.16.1  
 **Python:** 3.12.9
+

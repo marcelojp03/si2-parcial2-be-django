@@ -1,19 +1,19 @@
-# Docker & AWS ECR Deploy - ecommerce-django-be
+# Docker & AWS ECR Deployment Guide
 
-## 📦 Archivos Docker
+## Docker Files
 
-### Dockerfiles disponibles:
+### Available Dockerfiles:
 
-1. **`Dockerfile`** - Para desarrollo
-   - Usa `runserver` de Django
-   - Ideal para testing
+1. **`Dockerfile`** - Development
+   - Uses Django `runserver`
+   - Ideal for testing
    
-2. **`Dockerfile.prod`** - Para producción
-   - Usa Gunicorn (4 workers, 2 threads)
-   - Usuario no-root (seguridad)
-   - Healthcheck incluido
+2. **`Dockerfile.prod`** - Production
+   - Uses Gunicorn (4 workers, 2 threads)
+   - Non-root user (security)
+   - Healthcheck included
 
-## 🚀 Deploy a AWS ECR
+## Deploy to AWS ECR
 
 ### Prerequisitos
 
@@ -35,8 +35,8 @@
 
 ### ¿Qué hace el script?
 
-1. ✅ Verifica que Docker y AWS CLI estén instalados
-2. 🔐 Se autentica con AWS ECR
+1. Verifica que Docker y AWS CLI estén instalados
+2. Se autentica con AWS ECR
 3. 🔨 Construye la imagen Docker
 4. 🏷️ Aplica tags (específico + latest)
 5. 📤 Sube la imagen a ECR
@@ -89,7 +89,7 @@ docker pull 851725478821.dkr.ecr.us-east-1.amazonaws.com/eshop-be:latest
 docker run -p 8000:8000 --env-file .env 851725478821.dkr.ecr.us-east-1.amazonaws.com/eshop-be:latest
 ```
 
-## 📋 Variables de entorno necesarias
+## Variables de entorno necesarias
 
 Asegúrate de que tu `.env` o las variables de entorno contengan:
 
@@ -115,16 +115,16 @@ EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Error: Docker no está corriendo
 ```
-✅ Solución: Inicia Docker Desktop
+Solución: Inicia Docker Desktop
 ```
 
 ### Error: AWS CLI no instalado
 ```
-✅ Solución: Descarga desde https://aws.amazon.com/cli/
+Solución: Descarga desde https://aws.amazon.com/cli/
 ```
 
 ### Error: Credenciales AWS inválidas
@@ -145,7 +145,7 @@ aws ecr describe-repositories --repository-names eshop-be --region us-east-1
 aws ecr create-repository --repository-name eshop-be --region us-east-1
 ```
 
-## 📊 Comandos útiles
+## Comandos útiles
 
 ```powershell
 # Ver imágenes locales
@@ -173,7 +173,7 @@ docker images eshop-be --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 - **ECS Clusters**: https://console.aws.amazon.com/ecs/v2/clusters
 - **CloudWatch Logs**: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups
 
-## 📝 Notas
+## Notas
 
 - Las imágenes en ECR se mantienen indefinidamente (configura lifecycle policies si necesitas limpieza automática)
 - El tag `latest` siempre apunta a la última imagen subida

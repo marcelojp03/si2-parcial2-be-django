@@ -331,10 +331,10 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                 order.total = subtotal + tax + order.shipping_total - order.discount_total
                 
                 # ============================================================
-                # 📊 CÁLCULO DE TOTALES
+                # [*] CÁLCULO DE TOTALES
                 # ============================================================
                 print(f"\n{'='*60}")
-                print(f"📊 CÁLCULO DE TOTALES")
+                print(f"[*] CÁLCULO DE TOTALES")
                 print(f"{'='*60}")
                 print(f"Subtotal: Bs. {subtotal}")
                 print(f"IVA (13%): Bs. {tax}")
@@ -374,7 +374,7 @@ class CartViewSet(viewsets.ReadOnlyModelViewSet):
                             'expiration_date': vpay_result['expiration_date']
                         }
                         
-                        logger.info(f"✅ QR VPAY generado para pedido {order.order_number}")
+                        logger.info(f"[OK] QR VPAY generado para pedido {order.order_number}")
                     else:
                         # Si falla generar QR, cancelar pedido
                         order.status = 'CANCELLED'
@@ -647,12 +647,12 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
                         if inventory:
                             inventory.confirm_sale(order_item.qty)
                     
-                    # 🛒 Vaciar carrito del customer (solo cuando el pago está confirmado)
+                    # [*] Vaciar carrito del customer (solo cuando el pago está confirmado)
                     try:
                         cart = Cart.objects.filter(customer=order.customer).first()
                         if cart and cart.items.exists():
                             cart.items.all().delete()
-                            logger.info(f"✅ Carrito {cart.id} vaciado después de pago VPAY confirmado")
+                            logger.info(f"[OK] Carrito {cart.id} vaciado después de pago VPAY confirmado")
                     except Exception as cart_error:
                         logger.warning(f"Error vaciando carrito después de pago: {cart_error}")
                     
@@ -759,3 +759,4 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
                 {'error': f'Error al cancelar pedido: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+

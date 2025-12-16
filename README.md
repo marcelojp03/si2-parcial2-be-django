@@ -1,365 +1,207 @@
-# 🛍️ E-Commerce API Backend
+# E-Commerce Backend
 
-API REST completa para plataforma de comercio electrónico desarrollada con Django REST Framework.
+[![Django](https://img.shields.io/badge/Django-5.2.7-green.svg)](https://www.djangoproject.com/)
+[![DRF](https://img.shields.io/badge/DRF-3.16.1-red.svg)](https://www.django-rest-framework.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-blue.svg)](https://www.postgresql.org/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![AWS](https://img.shields.io/badge/AWS-S3%20%7C%20RDS%20%7C%20App%20Runner-orange.svg)](https://aws.amazon.com/)
 
-**✨ Versión 2.0** - Con JWT Authentication y Reportes con IA usando OpenAI GPT-4o-mini
-
-## � Estructura del Proyecto
-
-```
-ecommerce-django-be/
-├── _project/docs/                    # �📚 Documentación completa
-│   ├── API_DOCUMENTATION.md
-│   ├── API_QUICK_REFERENCE.md
-│   ├── API_STATUS_REPORT.md
-│   ├── ANGULAR_FRONTEND_GUIDE.md
-│   ├── FRONTEND_COMPONENTS_GUIDE.md
-│   ├── DATABASE_SCHEMA.md
-│   └── Ecommerce_API.postman_collection.json
-├── _project/tests/                   # 🧪 Tests y validaciones
-│   ├── test_endpoints.py
-│   └── test_results.json
-├── _project/scripts/                 # 🔧 Scripts de utilidad
-│   ├── populate_db.py
-│   └── check_tables.py
-├── _project/fixtures/                # 📦 Datos de prueba
-├── catalog/                 # 📦 Módulo de productos
-├── inventory/               # 📊 Módulo de inventario
-├── sales/                   # 🛒 Módulo de ventas
-├── security/                # 🔐 Módulo de autenticación
-├── analytics/               # 📈 Módulo de reportes
-├── ecommerce/               # ⚙️ Configuración Django
-├── manage.py
-├── requirements.txt
-└── README.md
-```
-
-**Ver estructura detallada:** [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
-
-## 📚 Documentación
-
-### 🚀 Guías de Inicio
-- **[_project/docs/QUICK_START.md](_project/docs/QUICK_START.md)** - Inicio rápido del proyecto
-- **[_project/docs/API_STATUS_REPORT.md](_project/docs/API_STATUS_REPORT.md)** - Estado actual del backend (96.4% funcional)
-- **[_project/docs/JWT_AND_AI_REPORTS_GUIDE.md](_project/docs/JWT_AND_AI_REPORTS_GUIDE.md)** - ✨ **Guía JWT y Reportes con IA**
-
-### 📖 Documentación API
-- **[_project/docs/API_DOCUMENTATION.md](_project/docs/API_DOCUMENTATION.md)** - Documentación completa de todos los endpoints
-- **[_project/docs/API_QUICK_REFERENCE.md](_project/docs/API_QUICK_REFERENCE.md)** - Referencia rápida de endpoints
-- **[_project/docs/Ecommerce_API.postman_collection.json](_project/docs/Ecommerce_API.postman_collection.json)** - Colección de Postman
-
-### 👨‍💻 Guías para Frontend
-- **[_project/docs/FRONTEND_QUICK_START.md](_project/docs/FRONTEND_QUICK_START.md)** - ⚡ **Inicio rápido para frontend (NUEVO)**
-- **[_project/docs/FRONTEND_INTEGRATION_GUIDE.md](_project/docs/FRONTEND_INTEGRATION_GUIDE.md)** - 📘 **Guía completa de integración (NUEVO)**
-- **[_project/docs/typescript-models.ts](_project/docs/typescript-models.ts)** - 📝 **Modelos TypeScript listos para usar**
-- **[_project/docs/ANGULAR_FRONTEND_GUIDE.md](_project/docs/ANGULAR_FRONTEND_GUIDE.md)** - Guía completa para Angular
-- **[_project/docs/FRONTEND_COMPONENTS_GUIDE.md](_project/docs/FRONTEND_COMPONENTS_GUIDE.md)** - Componentes recomendados (React/Vue/Angular)
-
-### 🗄️ Base de Datos
-- **[_project/docs/DATABASE_SCHEMA.md](_project/docs/DATABASE_SCHEMA.md)** - Esquema completo de la base de datos
-- **[_project/docs/ERD.md](_project/docs/ERD.md)** - Diagrama entidad-relación
-
-## ✨ Nuevas Características (Versión 2.0)
-
-### � JWT Authentication
-- **Tokens de acceso** (1 hora) y **refresh** (7 días)
-- **Rotación automática** de refresh tokens
-- **Blacklisting** de tokens antiguos
-- **Swagger UI** con autenticación Bearer integrada
-- Endpoints: `/api/auth/token/`, `/api/auth/token/refresh/`, `/api/auth/token/verify/`
-
-### 🤖 Reportes con IA (OpenAI GPT-4o-mini)
-- **Generación de SQL** desde lenguaje natural
-- **Autocorrección** automática de SQL con errores
-- **Interpretación** de resultados en lenguaje natural
-- **Exportación** a JSON, CSV, Excel y PDF
-- **Modo dry-run** para validar SQL sin ejecutar
-- Endpoint: `POST /api/analytics/reports/ai-report/`
-
-**Ejemplo:**
-```bash
-POST /api/analytics/reports/ai-report/
-{
-  "query": "Muéstrame las ventas de los últimos 30 días",
-  "format": "excel"
-}
-```
-
-### 📋 Sistema de Respuestas Consistente
-- Formato estandarizado en toda la API
-- Clase `ApiResponse` con métodos helper
-- Manejo de errores unificado
+REST API backend for e-commerce platform with multi-warehouse inventory, product variants, shopping cart, payment gateway integration (VPAY, QR), and AI-powered analytics reports using OpenAI GPT-4o-mini.
 
 ---
 
-## �🚀 Inicio Rápido
+## Features
 
-### Credenciales de Prueba
-```
-Username: admin
-Password: admin123
-```
+- **JWT Authentication** with token blacklist
+- **Product catalog** with variants and dynamic attributes (EAV model)
+- **Multi-warehouse inventory** with stock reservation system
+- **Shopping cart** with persistent storage
+- **Checkout flow** with multiple payment providers (VPAY, QR, MOCK)
+- **Order management** with status tracking
+- **AI-powered reports** using OpenAI GPT-4o-mini
+- **S3 image storage** with presigned URLs
+- **Role-based access control** (RBAC)
+- **Analytics module** with data warehouse (sale facts)
 
-### URLs Principales
+---
 
-```
-Base URL:     http://127.0.0.1:8000
-Swagger UI:   http://127.0.0.1:8000/api/docs/         ← Con JWT auth
-ReDoc:        http://127.0.0.1:8000/api/redoc/
-Admin Panel:  http://127.0.0.1:8000/admin/
-Healthcheck:  http://127.0.0.1:8000/api/healthz/
-```
+## Prerequisites
 
-### Iniciar Servidor
+- Python >= 3.11
+- PostgreSQL 14+
+- AWS Account (S3, RDS, App Runner)
+- OpenAI API Key (optional, for AI reports)
+- npm or yarn (for frontend)
+
+---
+
+## Installation
+
+### 1. Clone the repository
 
 ```bash
-# Activar entorno virtual
-.\venv\Scripts\activate
+git clone https://github.com/marcelojp03/si2-parcial2-be-django.git
+cd ecommerce-django-be
+```
 
-# Ejecutar servidor
+### 2. Create virtual environment
+
+```bash
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Django
+SECRET_KEY="your-secret-key-here"
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database
+DB_USER=postgres
+DB_PASS=your-password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ecommerce
+DB_SCHEMA=si2-ecommerce
+
+# AWS
+AWS_REGION=us-east-1
+AWS_PROFILE=default  # For local development
+
+# JWT
+JWT_SECRET_KEY=your-jwt-secret
+
+# OpenAI (optional)
+OPENAI_API_KEY=sk-proj-YOUR_KEY_HERE
+LLM_MODEL=gpt-4o-mini
+```
+
+### 5. Setup database
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+### 6. Populate sample data (optional)
+
+```bash
+python scripts/populate_db.py
+```
+
+---
+
+## Running the Application
+
+### Development mode
+
+```bash
 python manage.py runserver
 ```
 
-## 📦 Módulos Implementados (5 Módulos - 100% Funcionales)
-
-### 1. **CATALOG** `/api/catalog/` - Gestión de Productos ✅
-```
-📁 catalog/
-├── models.py          # Category, Attribute, Product, ProductVariant
-├── serializers.py     # Serializers con relaciones anidadas
-├── views.py           # ViewSets con filtros avanzados
-└── urls.py            # 15+ endpoints
-```
-- Categorías jerárquicas con subcategorías
-- Atributos configurables (Color, Talla, Material, etc.)
-- Productos con múltiples variantes
-- Búsqueda y filtros avanzados
-- Gestión de imágenes
-
-### 2. **INVENTORY** `/api/inventory/` - Control de Inventario ✅
-```
-📁 inventory/
-├── models.py          # Warehouse, Inventory
-├── serializers.py     # Serializers con stock disponible
-├── views.py           # Actions para ajustar/reservar stock
-└── urls.py            # 12+ endpoints
-```
-- Múltiples almacenes
-- Stock por almacén y variante
-- Reservas y confirmaciones de stock
-- Alertas de stock bajo
-- **Bloqueo pesimista** para evitar race conditions
-
-### 3. **SALES** `/api/sales/` - Ventas y Pedidos ✅
-```
-📁 sales/
-├── models.py          # Customer, Cart, Order, Payment
-├── serializers.py     # Serializers con cálculos de totales
-├── views.py           # Checkout, confirmar pago, cancelar
-└── urls.py            # 18+ endpoints
-```
-- Gestión de clientes y direcciones
-- Carrito de compras completo
-- Proceso de checkout con transacciones atómicas
-- Confirmación de pagos con **idempotencia**
-- Cancelación con liberación automática de stock
-- Cálculo automático de IVA (13%)
-
-### 4. **SECURITY** `/api/auth/` - Autenticación y RBAC ✅
-```
-📁 security/
-├── models.py          # User, Role, Resource, RoleResource
-├── serializers.py     # Serializers con permisos
-├── views.py           # Auth, usuarios, roles, permisos
-└── urls.py            # 15+ endpoints
-```
-- Sistema RBAC completo
-- Menú dinámico basado en permisos
-- Gestión de usuarios y roles
-- Permisos granulares por recurso
-
-### 5. **ANALYTICS** `/api/analytics/` - Reportes y Análisis ✅
-```
-📁 analytics/
-├── models.py          # SaleFact, ForecastModel, Report
-├── serializers.py     # Serializers con métricas
-├── views.py           # Dashboard, reportes, forecasting, AI reports
-├── report_utils.py    # ✨ Utilidades para IA (NUEVO)
-└── urls.py            # 11+ endpoints
-```
-- Dashboard con métricas de ventas
-- **🤖 Reportes con IA usando OpenAI GPT-4o-mini (NUEVO)**
-- **Generación de SQL desde lenguaje natural**
-- **Autocorrección de SQL con IA**
-- **Interpretación de resultados en lenguaje natural**
-- **Exportación a CSV, Excel y PDF**
-- Top productos y categorías
-- Generación de reportes personalizados
-- Forecasting de ventas (simulado, listo para ML real)
-- **SaleFact automático** via signals
-
-## ⚡ Características Avanzadas Implementadas
-
-### ✅ Concurrencia y Transacciones
-- **Bloqueo Pesimista** (`select_for_update()`) en operaciones críticas
-- **Transacciones Atómicas** para garantizar integridad
-- **Idempotencia** en confirmación de pagos para evitar duplicados
-
-### ✅ Automatización
-- **Signal Automático**: Pedidos PAID → SaleFact automáticamente
-- **Reserva Automática**: Checkout → Stock reservado
-- **Liberación Automática**: Cancelación → Stock liberado
-
-### ✅ Validaciones
-- **Máquina de Estados**: Solo transiciones válidas (CREATED → PAID)
-- **Validación de Stock**: Verifica disponibilidad antes de confirmar
-- **Validación de Concurrencia**: Evita confirmaciones simultáneas
-
-## 🔥 Flujo Completo de Compra
-
-```
-1. Cliente agrega al carrito
-   POST /api/sales/carts/{id}/add_item/
-
-2. Cliente hace checkout
-   POST /api/sales/carts/{id}/checkout/
-   → Pedido CREATED
-   → Stock RESERVADO
-
-3. Confirmar pago (con idempotencia)
-   POST /api/sales/orders/{id}/confirm_payment/
-   → Pedido PAID
-   → Stock DECREMENTADO
-   → SaleFact CREADO (automático)
-
-4. Analytics actualizado
-   GET /api/analytics/sales/dashboard/
-```
-
-## 💾 Base de Datos
-
-**Motor:** PostgreSQL 15+ (AWS RDS)  
-**Schema:** `si2-ecommmerce`  
-**Tablas:** 34 tablas organizadas en 5 módulos
-
-**Datos Precargados:**
-- 6 categorías jerárquicas
-- 4 atributos (Color, Talla, Material, Estilo)
-- 19 valores de atributos
-- 3 almacenes (Principal, Norte, Sur)
-
-## 🛠️ Stack Tecnológico
-
-- **Python:** 3.12.9
-- **Django:** 5.2.7
-- **Django REST Framework:** 3.16.1
-- **djangorestframework-simplejwt:** 5.5.1 (JWT Auth)
-- **PostgreSQL:** 15+ en AWS RDS
-- **drf-spectacular:** 0.28.0 (OpenAPI/Swagger)
-- **django-cors-headers:** 4.9.0
-- **python-decouple:** 3.8
-- **openai:** 2.7.1 (Reportes con IA)
-- **openpyxl:** 3.1.5 (Exportación Excel)
-- **reportlab:** 4.4.4 (Exportación PDF)
-
-## 🎯 Características Principales
-
-## 🎯 Endpoints Totales: ~70+ Documentados
-
-- **System:** 3 endpoints (healthcheck, schema, docs)
-- **Catalog:** 15+ endpoints (categorías, atributos, productos)
-- **Inventory:** 12+ endpoints (almacenes, inventario, stock)
-- **Sales:** 18+ endpoints (clientes, carritos, pedidos)
-- **Security:** 15+ endpoints (auth, usuarios, roles, permisos)
-- **Analytics:** 10+ endpoints (dashboard, reportes, forecasting)
-
-## 📱 CORS Configurado
-
-- `http://localhost:3000` (React)
-- `http://localhost:5173` (Vite)
-- `http://127.0.0.1:8000` (mismo origen)
-
-## 🧪 Pruebas
-
-### Swagger UI (Recomendado)
-```
-http://127.0.0.1:8000/api/docs/
-```
-
-### Postman
-Importar: `_project/docs/Ecommerce_API.postman_collection.json`
-
-### Healthcheck
-```bash
-curl http://127.0.0.1:8000/api/healthz/
-```
-
-## � Configuración de Negocio
-
-- **Moneda:** BOB (Bolivianos)
-- **IVA:** 13%
-- **Formato fechas:** ISO 8601
-- **Paginación:** 10 items/página (max 100)
-
-## 🔐 Seguridad
-
-### Implementado ✅
-- **JWT Authentication** con djangorestframework-simplejwt
-- **Permisos `IsAuthenticated`** por defecto en todos los endpoints
-- **Tokens con expiración**: Access token (1 hora), Refresh token (7 días)
-- **Rotación de tokens**: Se genera nuevo refresh token al refrescar
-- **Sesiones de Django** para admin panel
-
-### Endpoints Públicos (No requieren JWT)
-- `POST /api/auth/token/` - Obtener token
-- `POST /api/auth/token/refresh/` - Refrescar token
-- `POST /api/auth/register/` - Registro de usuarios
-- `GET /api/healthz/` - Healthcheck
-- `GET /api/docs/` - Swagger UI
-
-### Para Producción (Opcional)
-- Rate Limiting / Throttling específico por endpoint
-- Blacklist de tokens comprometidos (con Redis)
-
-## 📝 Comandos Útiles
+### Production mode (Gunicorn)
 
 ```bash
-# === Desarrollo ===
-python manage.py runserver                    # Iniciar servidor
-python manage.py shell                        # Shell interactivo
-
-# === Migraciones ===
-python manage.py makemigrations               # Crear migraciones
-python manage.py migrate                      # Aplicar migraciones
-python manage.py showmigrations               # Ver estado de migraciones
-
-# === Usuarios ===
-python manage.py createsuperuser              # Crear superusuario
-
-# === Scripts de utilidad ===
-python _project/scripts/populate_db.py                 # Poblar base de datos con datos demo
-python _project/scripts/check_tables.py                # Verificar tablas en la base de datos
-
-# === Testing ===
-python _project/tests/test_endpoints.py                # Probar todos los endpoints (28 tests)
-python manage.py test                         # Ejecutar tests unitarios
-
-# === Producción ===
-python manage.py collectstatic                # Recopilar archivos estáticos
-python manage.py check --deploy               # Verificar configuración para producción
+gunicorn ecommerce.wsgi:application --bind 0.0.0.0:1112 --workers 2 --threads 4
 ```
 
-## 🔐 Configuración de Seguridad
+### Deploy to AWS App Runner
 
-Para producción, asegúrate de:
+```bash
+# Build and push Docker image to ECR
+docker build -f Dockerfile.prod -t eshop-be .
+docker tag eshop-be:latest 851725478821.dkr.ecr.us-east-1.amazonaws.com/eshop-be:latest
+docker push 851725478821.dkr.ecr.us-east-1.amazonaws.com/eshop-be:latest
+```
 
-1. Cambiar `SECRET_KEY` en settings.py
-2. Configurar `DEBUG = False`
-3. Establecer `ALLOWED_HOSTS` apropiados
-4. Usar PostgreSQL en lugar de SQLite
-5. Configurar variables de entorno para datos sensibles
+Server runs on `http://localhost:8000/api`
 
-## 📄 Licencia
+**Production:** `https://ggppjnr4rk.us-east-1.awsapprunner.com`
 
-Proyecto académico - UAGRM - Sistemas de Información 2
+---
 
+## API Modules
+
+| Module | Endpoints | Description |
+|--------|-----------|-------------|
+| **Auth** | `/api/auth/login`, `/api/auth/register`, `/api/auth/refresh` | JWT authentication |
+| **Catalog** | `/api/catalog/products`, `/api/catalog/categories` | Product management |
+| **Inventory** | `/api/inventory/warehouses`, `/api/inventory/inventory` | Stock management |
+| **Cart** | `/api/sales/carts`, `/api/sales/cart-items` | Shopping cart |
+| **Orders** | `/api/sales/orders`, `/api/sales/checkout` | Order processing |
+| **Payments** | `/api/sales/payments` | Payment handling (VPAY, QR, MOCK) |
+| **Analytics** | `/api/analytics/reports` | AI-powered reports |
+| **Customers** | `/api/customers/` | Customer profiles |
+
+---
+
+## Project Structure
+
+```
+ecommerce-django-be/
+├── apps/
+│   ├── administration/     # Users, roles, RBAC
+│   ├── catalog/            # Products, categories, variants
+│   ├── inventory/          # Warehouses, stock
+│   ├── sales/              # Orders, cart, payments
+│   ├── customers/          # Customer profiles
+│   ├── analytics/          # Reports, forecasting
+│   └── core/               # Shared utilities
+├── docs/                   # Documentation
+│   ├── API_DOCUMENTATION.md
+│   ├── API_QUICK_REFERENCE.md
+│   ├── DATABASE_STRUCTURE.md
+│   ├── DEPLOYMENT.md
+│   └── postman_collection.json
+├── scripts/                # Utility scripts
+│   └── populate_db.py
+├── ecommerce/              # Django settings
+├── Dockerfile.prod         # Production Docker image
+├── entrypoint.py           # Startup script
+├── requirements.txt
+└── manage.py
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) | Complete API reference with examples |
+| [docs/API_QUICK_REFERENCE.md](docs/API_QUICK_REFERENCE.md) | Quick endpoint reference |
+| [docs/DATABASE_STRUCTURE.md](docs/DATABASE_STRUCTURE.md) | Complete database schema (35 tables) |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | AWS deployment guide (ECR + App Runner) |
+| [docs/postman_collection.json](docs/postman_collection.json) | Postman collection for testing |
+
+---
+
+## Tech Stack
+
+- **Framework:** Django 5.2.7
+- **API:** Django REST Framework 3.16.1
+- **Database:** PostgreSQL (AWS RDS)
+- **Storage:** AWS S3 (product images)
+- **Authentication:** JWT with SimpleJWT
+- **Payment:** VPAY, QR Code
+- **AI:** OpenAI GPT-4o-mini (reports)
+- **Deployment:** AWS App Runner + ECR
+- **Language:** Python 3.11
+
+---
+
+## License
+
+MIT

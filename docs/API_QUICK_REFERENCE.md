@@ -1,13 +1,13 @@
-# 🚀 E-Commerce API - Guía Rápida
+# E-Commerce API - Guía Rápida
 
 **Base URL:** `http://127.0.0.1:8000`  
 **Swagger:** `http://127.0.0.1:8000/api/docs/`
 
 ---
 
-## 📋 Endpoints por Módulo
+## [*] Endpoints por Módulo
 
-### 🔧 SYSTEM
+### [*] SYSTEM
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/healthz/` | Estado del sistema |
@@ -16,16 +16,16 @@
 
 ---
 
-### 🔐 AUTHENTICATION - JWT (NUEVO)
+### [*] AUTHENTICATION - JWT (NUEVO)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| POST | `/api/auth/token/` | 🔑 Obtener access + refresh tokens | ❌ Public |
-| POST | `/api/auth/token/refresh/` | 🔄 Renovar access token | ❌ Public |
-| POST | `/api/auth/token/verify/` | ✅ Validar token | ❌ Public |
-| POST | `/api/auth/register/` | 👤 Registro de usuario | ❌ Public |
-| GET | `/api/auth/me/` | 👤 Usuario actual | ✅ Required |
-| GET | `/api/auth/menu/` | 📋 Menú dinámico | ✅ Required |
-| POST | `/api/auth/logout/` | 🚪 Cerrar sesión | ✅ Required |
+| POST | `/api/auth/token/` | [*] Obtener access + refresh tokens | [X] Public |
+| POST | `/api/auth/token/refresh/` | [*] Renovar access token | [X] Public |
+| POST | `/api/auth/token/verify/` | [OK] Validar token | [X] Public |
+| POST | `/api/auth/register/` | [*] Registro de usuario | [X] Public |
+| GET | `/api/auth/me/` | [*] Usuario actual | [OK] Required |
+| GET | `/api/auth/menu/` | [*] Menú dinámico | [OK] Required |
+| POST | `/api/auth/logout/` | [*] Cerrar sesión | [OK] Required |
 
 **Formato del token:**
 ```
@@ -42,7 +42,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 📦 CATALOG - Productos y Categorías
+### [*] CATALOG - Productos y Categorías
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/catalog/categories/` | Listar categorías |
@@ -70,7 +70,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 📊 INVENTORY - Almacenes e Inventario
+### [*] INVENTORY - Almacenes e Inventario
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/inventory/warehouses/` | Listar almacenes |
@@ -81,10 +81,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | | |
 | GET | `/api/inventory/inventory/` | Listar inventario |
 | GET | `/api/inventory/inventory/{id}/` | Detalle de inventario |
-| POST | `/api/inventory/inventory/{id}/adjust_stock/` | ⚡ Ajustar stock |
-| POST | `/api/inventory/inventory/{id}/reserve/` | ⚡ Reservar stock |
-| POST | `/api/inventory/inventory/{id}/confirm_sale/` | ⚡ Confirmar venta |
-| POST | `/api/inventory/inventory/{id}/release/` | ⚡ Liberar stock |
+| POST | `/api/inventory/inventory/{id}/adjust_stock/` | [*] Ajustar stock |
+| POST | `/api/inventory/inventory/{id}/reserve/` | [*] Reservar stock |
+| POST | `/api/inventory/inventory/{id}/confirm_sale/` | [*] Confirmar venta |
+| POST | `/api/inventory/inventory/{id}/release/` | [*] Liberar stock |
 
 **Filtros de inventario:**
 - `?warehouse=1` - Por almacén
@@ -93,7 +93,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 🛒 SALES - Ventas y Pedidos
+### [*] SALES - Ventas y Pedidos
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/sales/customers/` | Listar clientes |
@@ -109,11 +109,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | POST | `/api/sales/carts/{id}/add_item/` | Agregar al carrito |
 | POST | `/api/sales/carts/{id}/remove_item/{item_id}/` | Quitar del carrito |
 | POST | `/api/sales/carts/{id}/clear/` | Vaciar carrito |
-| POST | `/api/sales/carts/{id}/checkout/` | 🔥 Crear pedido |
+| POST | `/api/sales/carts/{id}/checkout/` | [*] Crear pedido |
 | | |
 | GET | `/api/sales/orders/` | Listar pedidos |
 | GET | `/api/sales/orders/{id}/` | Detalle del pedido |
-| POST | `/api/sales/orders/{id}/confirm_payment/` | 🔥 Confirmar pago |
+| POST | `/api/sales/orders/{id}/confirm_payment/` | [*] Confirmar pago |
 | POST | `/api/sales/orders/{id}/cancel/` | ⚠️ Cancelar pedido |
 
 **Estados de pedidos:**
@@ -130,7 +130,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 🔐 SECURITY - Usuarios y Permisos
+### [*] SECURITY - Usuarios y Permisos
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | `/api/auth/login/` | Iniciar sesión |
@@ -151,20 +151,20 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 📈 ANALYTICS - Reportes y Forecasting
+### [*] ANALYTICS - Reportes y Forecasting
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/api/analytics/sales/` | Listar hechos de ventas | ✅ Required |
-| GET | `/api/analytics/sales/dashboard/` | 📊 Dashboard | ✅ Required |
-| POST | `/api/analytics/sales/generate_report/` | Generar reporte | ✅ Required |
+| GET | `/api/analytics/sales/` | Listar hechos de ventas | [OK] Required |
+| GET | `/api/analytics/sales/dashboard/` | [*] Dashboard | [OK] Required |
+| POST | `/api/analytics/sales/generate_report/` | Generar reporte | [OK] Required |
 | | | |
-| GET | `/api/analytics/forecasts/` | Listar forecasts | ✅ Required |
-| POST | `/api/analytics/forecasts/` | Crear forecast | ✅ Required |
-| POST | `/api/analytics/forecasts/{id}/predict/` | 🔮 Predecir ventas | ✅ Required |
+| GET | `/api/analytics/forecasts/` | Listar forecasts | [OK] Required |
+| POST | `/api/analytics/forecasts/` | Crear forecast | [OK] Required |
+| POST | `/api/analytics/forecasts/{id}/predict/` | 🔮 Predecir ventas | [OK] Required |
 | | | |
-| GET | `/api/analytics/reports/` | Listar reportes | ✅ Required |
-| POST | `/api/analytics/reports/` | Crear reporte | ✅ Required |
-| **POST** | **`/api/analytics/reports/ai-report/`** | **🤖 Reporte con IA (NUEVO)** | **✅ Required** |
+| GET | `/api/analytics/reports/` | Listar reportes | [OK] Required |
+| POST | `/api/analytics/reports/` | Crear reporte | [OK] Required |
+| **POST** | **`/api/analytics/reports/ai-report/`** | **🤖 Reporte con IA (NUEVO)** | **[OK] Required** |
 
 **🤖 AI Reports - Formatos disponibles:**
 - `json` - Datos estructurados con interpretación IA
@@ -321,7 +321,7 @@ Content-Type: application/json
 
 ---
 
-## �🔥 Flujo de Compra Completo
+## �[*] Flujo de Compra Completo
 
 ### 1️⃣ Agregar al Carrito
 ```http
@@ -378,7 +378,7 @@ GET /api/analytics/sales/dashboard/?days=30
 
 ---
 
-## ⚡ Características Avanzadas
+## [*] Características Avanzadas
 
 ### Concurrencia (Bloqueo Pesimista)
 Los siguientes endpoints usan `select_for_update()`:
@@ -399,7 +399,7 @@ Máquina de estados estricta:
 
 ---
 
-## 📊 Ejemplos de Respuestas
+## [*] Ejemplos de Respuestas
 
 ### Dashboard de Analytics
 ```json
@@ -507,10 +507,10 @@ Password: (configurado durante creación)
 ```
 
 ### Datos Precargados
-- ✅ 6 categorías
-- ✅ 4 atributos (Color, Talla, Material, Estilo)
-- ✅ 19 valores de atributos
-- ✅ 3 almacenes (Principal, Norte, Sur)
+- [OK] 6 categorías
+- [OK] 4 atributos (Color, Talla, Material, Estilo)
+- [OK] 19 valores de atributos
+- [OK] 3 almacenes (Principal, Norte, Sur)
 
 ---
 
@@ -534,7 +534,7 @@ El backend acepta peticiones de:
 
 ---
 
-## 💰 Configuración de Negocio
+## [*] Configuración de Negocio
 
 - **Moneda:** BOB (Bolivianos)
 - **IVA:** 13%
@@ -552,3 +552,5 @@ El backend acepta peticiones de:
 ---
 
 **Para documentación completa ver:** `API_DOCUMENTATION.md`
+
+

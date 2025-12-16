@@ -21,12 +21,12 @@ def run_command(cmd, description):
             capture_output=True,
             text=True
         )
-        print(f"✅ ÉXITO")
+        print(f"[OK] ÉXITO")
         if result.stdout:
             print(f"STDOUT:\n{result.stdout}")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ ERROR (Exit Code: {e.returncode})")
+        print(f"[X] ERROR (Exit Code: {e.returncode})")
         if e.stdout:
             print(f"STDOUT:\n{e.stdout}")
         if e.stderr:
@@ -35,11 +35,11 @@ def run_command(cmd, description):
 
 def main():
     print("\n" + "="*60)
-    print("🚀 INICIANDO APLICACIÓN DJANGO")
+    print("[*] INICIANDO APLICACIÓN DJANGO")
     print("="*60)
     
     # Verificar variables de entorno críticas
-    print("\n📋 Variables de entorno:")
+    print("\n[*] Variables de entorno:")
     env_vars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DEBUG', 'DJANGO_SETTINGS_MODULE']
     for var in env_vars:
         value = os.environ.get(var, 'NO CONFIGURADA')
@@ -78,7 +78,7 @@ def main():
         if static_root:
             try:
                 os.makedirs(static_root, exist_ok=True)
-                print(f"✅ Asegurado STATIC_ROOT en: {static_root}")
+                print(f"[OK] Asegurado STATIC_ROOT en: {static_root}")
             except Exception as e:
                 print(f"⚠️ No se pudo crear STATIC_ROOT '{static_root}': {e}")
 
@@ -95,7 +95,7 @@ def main():
             ['python', 'manage.py', 'migrate', '--noinput'],
             'Ejecutando migraciones de base de datos'
         ):
-            print("❌ Migraciones fallaron - ABORTANDO")
+            print("[X] Migraciones fallaron - ABORTANDO")
             sys.exit(1)
     else:
         print("ℹ️ RUN_MIGRATIONS está deshabilitado; omitiendo migrate")
@@ -121,3 +121,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

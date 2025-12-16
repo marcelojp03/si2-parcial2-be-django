@@ -20,10 +20,10 @@ class Command(BaseCommand):
         Category.objects.all().delete()
         Warehouse.objects.all().delete()
         
-        self.stdout.write(self.style.SUCCESS('✅ Base de datos limpia\n'))
+        self.stdout.write(self.style.SUCCESS('[OK] Base de datos limpia\n'))
         
         # ===== CATEGORÍAS =====
-        self.stdout.write(self.style.WARNING('📁 Creando Categorías de Ropa...'))
+        self.stdout.write(self.style.WARNING('[*] Creando Categorías de Ropa...'))
         self.stdout.write('='*60)
         
         fashion_categories = [
@@ -39,67 +39,67 @@ class Command(BaseCommand):
                 name=name,
                 defaults={'parent': None, 'status': 'ACTIVE'}
             )
-            self.stdout.write(f"  ✓ {name}")
+            self.stdout.write(f"  [OK] {name}")
         
-        self.stdout.write(self.style.SUCCESS(f'\n✅ {len(fashion_categories)} categorías creadas\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n[OK] {len(fashion_categories)} categorías creadas\n'))
         
         # ===== ATRIBUTOS =====
-        self.stdout.write(self.style.WARNING('🏷️  Creando Atributos...'))
+        self.stdout.write(self.style.WARNING('[*]  Creando Atributos...'))
         self.stdout.write('='*60)
         
         talla, _ = Attribute.objects.get_or_create(name="Talla")
-        self.stdout.write(f"  ✓ {talla.name}")
+        self.stdout.write(f"  [OK] {talla.name}")
         
         color, _ = Attribute.objects.get_or_create(name="Color")
-        self.stdout.write(f"  ✓ {color.name}")
+        self.stdout.write(f"  [OK] {color.name}")
         
         material, _ = Attribute.objects.get_or_create(name="Material")
-        self.stdout.write(f"  ✓ {material.name}")
+        self.stdout.write(f"  [OK] {material.name}")
         
         genero, _ = Attribute.objects.get_or_create(name="Genero")
-        self.stdout.write(f"  ✓ {genero.name}")
+        self.stdout.write(f"  [OK] {genero.name}")
         
         estilo, _ = Attribute.objects.get_or_create(name="Estilo")
-        self.stdout.write(f"  ✓ {estilo.name}")
+        self.stdout.write(f"  [OK] {estilo.name}")
         
-        self.stdout.write(self.style.SUCCESS('\n✅ 5 atributos creados\n'))
+        self.stdout.write(self.style.SUCCESS('\n[OK] 5 atributos creados\n'))
         
         # ===== VALORES DE ATRIBUTOS =====
-        self.stdout.write(self.style.WARNING('📋 Creando Valores de Atributos...'))
+        self.stdout.write(self.style.WARNING('[*] Creando Valores de Atributos...'))
         self.stdout.write('='*60)
         
         # Tallas
         tallas_valores = ["XS", "S", "M", "L", "XL", "XXL", "36", "37", "38", "39", "40", "41", "42", "43", "44"]
         for valor in tallas_valores:
             AttributeValue.objects.get_or_create(attribute=talla, value=valor)
-        self.stdout.write(f"  ✓ Talla: {len(tallas_valores)} valores")
+        self.stdout.write(f"  [OK] Talla: {len(tallas_valores)} valores")
         
         # Colores
         colores = ["Negro", "Blanco", "Gris", "Azul", "Rojo", "Verde", "Amarillo", "Rosa", "Marron", "Beige", "Dorado", "Plateado"]
         for valor in colores:
             AttributeValue.objects.get_or_create(attribute=color, value=valor)
-        self.stdout.write(f"  ✓ Color: {len(colores)} valores")
+        self.stdout.write(f"  [OK] Color: {len(colores)} valores")
         
         # Materiales
         materiales = ["Algodon", "Poliester", "Mezclilla", "Cuero", "Cuero Sintetico", "Lana", "Seda", "Nylon"]
         for valor in materiales:
             AttributeValue.objects.get_or_create(attribute=material, value=valor)
-        self.stdout.write(f"  ✓ Material: {len(materiales)} valores")
+        self.stdout.write(f"  [OK] Material: {len(materiales)} valores")
         
         # Género
         generos = ["Hombre", "Mujer", "Unisex"]
         for valor in generos:
             AttributeValue.objects.get_or_create(attribute=genero, value=valor)
-        self.stdout.write(f"  ✓ Genero: {len(generos)} valores")
+        self.stdout.write(f"  [OK] Genero: {len(generos)} valores")
         
         # Estilos
         estilos = ["Casual", "Formal", "Deportivo", "Elegante", "Moderno"]
         for valor in estilos:
             AttributeValue.objects.get_or_create(attribute=estilo, value=valor)
-        self.stdout.write(f"  ✓ Estilo: {len(estilos)} valores")
+        self.stdout.write(f"  [OK] Estilo: {len(estilos)} valores")
         
         total_valores = len(tallas_valores) + len(colores) + len(materiales) + len(generos) + len(estilos)
-        self.stdout.write(self.style.SUCCESS(f'\n✅ {total_valores} valores creados\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n[OK] {total_valores} valores creados\n'))
         
         # ===== ALMACENES =====
         self.stdout.write(self.style.WARNING('🏢 Creando Almacenes...'))
@@ -120,21 +120,23 @@ class Command(BaseCommand):
                     'is_active': is_active
                 }
             )
-            self.stdout.write(f"  ✓ {name} ({location})")
+            self.stdout.write(f"  [OK] {name} ({location})")
         
-        self.stdout.write(self.style.SUCCESS(f'\n✅ {len(almacenes)} almacenes creados\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n[OK] {len(almacenes)} almacenes creados\n'))
         
         # ===== RESUMEN =====
         self.stdout.write('='*60)
         self.stdout.write(self.style.SUCCESS('🎉 POBLACION DE DATOS COMPLETADA'))
         self.stdout.write('='*60)
-        self.stdout.write(f'📁 Categorias: {Category.objects.count()}')
-        self.stdout.write(f'🏷️  Atributos: {Attribute.objects.count()}')
-        self.stdout.write(f'📋 Valores: {AttributeValue.objects.count()}')
+        self.stdout.write(f'[*] Categorias: {Category.objects.count()}')
+        self.stdout.write(f'[*]  Atributos: {Attribute.objects.count()}')
+        self.stdout.write(f'[*] Valores: {AttributeValue.objects.count()}')
         self.stdout.write(f'🏢 Almacenes: {Warehouse.objects.count()}')
         self.stdout.write('='*60)
-        self.stdout.write(self.style.SUCCESS('\n✅ Base de datos lista para importar productos!\n'))
+        self.stdout.write(self.style.SUCCESS('\n[OK] Base de datos lista para importar productos!\n'))
         self.stdout.write(self.style.WARNING('📌 Proximo paso:'))
         self.stdout.write('   python manage.py makemigrations')
         self.stdout.write('   python manage.py migrate')
         self.stdout.write('   python manage.py import_fashion_dataset --limit 10\n')
+
+

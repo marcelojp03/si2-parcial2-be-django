@@ -27,7 +27,7 @@ try {
 }
 
 if ($RepoExists) {
-    Write-Host "   ✓ El repositorio ya existe" -ForegroundColor Yellow
+    Write-Host "   [OK] El repositorio ya existe" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "📍 URL del repositorio:" -ForegroundColor Cyan
     $RepoInfo = aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region $AWS_REGION | ConvertFrom-Json
@@ -48,16 +48,16 @@ try {
         --image-scanning-configuration scanOnPush=true `
         --encryption-configuration encryptionType=AES256 | ConvertFrom-Json
     
-    Write-Host "✅ Repositorio creado exitosamente!" -ForegroundColor Green
+    Write-Host "[OK] Repositorio creado exitosamente!" -ForegroundColor Green
     Write-Host ""
-    Write-Host "📋 Detalles del repositorio:" -ForegroundColor Cyan
+    Write-Host "[*] Detalles del repositorio:" -ForegroundColor Cyan
     Write-Host "   Nombre: $($Result.repository.repositoryName)" -ForegroundColor White
     Write-Host "   URI: $($Result.repository.repositoryUri)" -ForegroundColor White
     Write-Host "   ARN: $($Result.repository.repositoryArn)" -ForegroundColor White
     Write-Host ""
     
     # Configurar lifecycle policy (opcional)
-    Write-Host "🔧 Configurando lifecycle policy..." -ForegroundColor White
+    Write-Host "[*] Configurando lifecycle policy..." -ForegroundColor White
     
     $LifecyclePolicy = @{
         rules = @(
@@ -81,19 +81,20 @@ try {
         --region $AWS_REGION `
         --lifecycle-policy-text $LifecyclePolicy | Out-Null
     
-    Write-Host "   ✓ Lifecycle policy configurada (mantiene últimas 10 imágenes)" -ForegroundColor Green
+    Write-Host "   [OK] Lifecycle policy configurada (mantiene últimas 10 imágenes)" -ForegroundColor Green
     Write-Host ""
     
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Green
-    Write-Host "✅ CONFIGURACIÓN COMPLETADA" -ForegroundColor Green
+    Write-Host "[OK] CONFIGURACIÓN COMPLETADA" -ForegroundColor Green
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Green
     Write-Host ""
-    Write-Host "💡 Próximo paso:" -ForegroundColor Cyan
+    Write-Host "[*] Próximo paso:" -ForegroundColor Cyan
     Write-Host "   .\scripts\deploy-ecr.ps1" -ForegroundColor White
     Write-Host ""
     
 } catch {
-    Write-Host "❌ Error al crear el repositorio" -ForegroundColor Red
+    Write-Host "[X] Error al crear el repositorio" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     exit 1
 }
+

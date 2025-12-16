@@ -21,7 +21,7 @@ class Command(BaseCommand):
         if not options['confirm']:
             self.stdout.write(
                 self.style.WARNING(
-                    '⚠️  Este comando eliminará TODAS las categorías existentes!'
+                    '[!]  Este comando eliminará TODAS las categorías existentes!'
                 )
             )
             self.stdout.write(
@@ -37,10 +37,10 @@ class Command(BaseCommand):
         # Limpiar solo categorías (mantener atributos y warehouses)
         Category.objects.all().delete()
         
-        self.stdout.write(self.style.SUCCESS('✅ Categorías eliminadas\n'))
+        self.stdout.write(self.style.SUCCESS('[OK] Categorías eliminadas\n'))
         
         # ===== CATEGORÍAS DATASET2 =====
-        self.stdout.write(self.style.WARNING('📁 Creando Categorías de Google Store...'))
+        self.stdout.write(self.style.WARNING('[*] Creando Categorías de Google Store...'))
         self.stdout.write('='*60)
         
         # Categorías del dataset2
@@ -56,13 +56,13 @@ class Command(BaseCommand):
                 name=name,
                 defaults={'parent': None, 'status': 'ACTIVE'}
             )
-            action = "✓ Creada" if created else "✓ Existente"
+            action = "[OK] Creada" if created else "[OK] Existente"
             self.stdout.write(f"  {action}: {name}")
         
-        self.stdout.write(self.style.SUCCESS(f'\n✅ {len(dataset2_categories)} categorías creadas\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n[OK] {len(dataset2_categories)} categorías creadas\n'))
         
         # ===== ATRIBUTOS (si no existen) =====
-        self.stdout.write(self.style.WARNING('🏷️  Verificando Atributos...'))
+        self.stdout.write(self.style.WARNING('[*]  Verificando Atributos...'))
         self.stdout.write('='*60)
         
         attributes = [
@@ -75,7 +75,7 @@ class Command(BaseCommand):
         
         for attr_name, values in attributes:
             attr, created = Attribute.objects.get_or_create(name=attr_name)
-            action = "✓ Creado" if created else "✓ Existente"
+            action = "[OK] Creado" if created else "[OK] Existente"
             self.stdout.write(f"  {action}: {attr_name}")
             
             # Crear valores
@@ -83,10 +83,10 @@ class Command(BaseCommand):
                 AttributeValue.objects.get_or_create(attribute=attr, value=value)
             self.stdout.write(f"    → {len(values)} valores")
         
-        self.stdout.write(self.style.SUCCESS(f'\n✅ {len(attributes)} atributos verificados\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n[OK] {len(attributes)} atributos verificados\n'))
         
         # ===== WAREHOUSES (si no existen) =====
-        self.stdout.write(self.style.WARNING('🏭 Verificando Almacenes...'))
+        self.stdout.write(self.style.WARNING('[*] Verificando Almacenes...'))
         self.stdout.write('='*60)
         
         warehouses = [
@@ -103,20 +103,23 @@ class Command(BaseCommand):
                     'location': wh_data['location']
                 }
             )
-            action = "✓ Creado" if created else "✓ Existente"
+            action = "[OK] Creado" if created else "[OK] Existente"
             self.stdout.write(f"  {action}: {wh_data['name']}")
         
-        self.stdout.write(self.style.SUCCESS(f'\n✅ {len(warehouses)} almacenes verificados\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n[OK] {len(warehouses)} almacenes verificados\n'))
         
         # ===== RESUMEN =====
         self.stdout.write('='*60)
         self.stdout.write(self.style.SUCCESS('🎉 Base de datos lista para dataset2!'))
         self.stdout.write('='*60)
-        self.stdout.write(f"📁 Categorías: {Category.objects.count()}")
-        self.stdout.write(f"🏷️  Atributos: {Attribute.objects.count()}")
-        self.stdout.write(f"📋 Valores: {AttributeValue.objects.count()}")
-        self.stdout.write(f"🏭 Almacenes: {Warehouse.objects.count()}")
+        self.stdout.write(f"[*] Categorías: {Category.objects.count()}")
+        self.stdout.write(f"[*]  Atributos: {Attribute.objects.count()}")
+        self.stdout.write(f"[*] Valores: {AttributeValue.objects.count()}")
+        self.stdout.write(f"[*] Almacenes: {Warehouse.objects.count()}")
         self.stdout.write('='*60)
         self.stdout.write(self.style.WARNING('\n▶️  Siguiente paso:'))
         self.stdout.write('   python manage.py import_dataset2')
         self.stdout.write('')
+
+
+
